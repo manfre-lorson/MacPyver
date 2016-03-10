@@ -30,8 +30,10 @@ Created on Fri Nov 20 12:17:03 2015
 
 
 """
-
-from __send_email import send_mail
+try:
+	from __send_email import send_mail
+except:
+	pass
 import info
 import raster
 import postgres
