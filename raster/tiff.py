@@ -9,11 +9,11 @@ import osgeo.gdalnumeric as zz_gdalnum
 import osgeo.gdalconst as zz_gdalcon
 
 
-#HelpInhalt = ['read_tif', 'read_tif_info', 'write_tif' ]
-#HelpInhalt.sort()
-#def Help(inhal = HelpInhalt):
-def Help(inhal = sorted(['read_tif', 'read_tif_info', 'write_tif'])):
+
+def Help(inhal = ''):
     HelpInhalt =  sorted(['read_tif', 'read_tif_info', 'write_tif'])
+    if inhal =='':
+        inhal = HelpInhalt
     inhalt = inhal
     if type(inhalt)== str:
         cList = []
@@ -59,7 +59,7 @@ def Help(inhal = sorted(['read_tif', 'read_tif_info', 'write_tif'])):
             "write_tif":"""write_tif:      
                 write data to tif
                 
-                >>> write_tif(file_with_srid, full_output_name, data, 3)
+                >>> write_tif(file_with_srid, full_output_name, data, 1, nodata=False)
                 
                 file_wite_srid   --> the original file with spatial infromations
                 full_output_name --> path + filename + tile type e.g.: r'c:\\temp\\file1.tif'
@@ -73,6 +73,11 @@ def Help(inhal = sorted(['read_tif', 'read_tif_info', 'write_tif'])):
                                         - 4 --> Float32
                                         - 5 --> Float64 
                                  --> default is Int32
+                nodata           --> by default there will be no NoData Value asigned
+                                       if True:
+                                          it will put the max Value for Unsigned Integers
+                                          it will put the min Value for signed Integers and floats
+                                       if you put a Value --> this Value will be the NoData Value
 
                 ______________________________________________________________________
             """}
@@ -93,7 +98,7 @@ def Help(inhal = sorted(['read_tif', 'read_tif_info', 'write_tif'])):
         for ele in op:
             print myDic[ele]   
     elif counter == 0:
-        print ">>> Fehler: Wort nicht gefunden <<<"
+        print ">>> Couldnt find what you are looking for<<<"
         print ""      
         for ele in HelpInhalt:
             print myDic[ele]       
@@ -115,7 +120,7 @@ def read_tif_info(tif):
     inRows = inTif.RasterYSize
     return inTif, driver, inCols, inRows
     
-def write_tif(file_with_srid,full_output_name, data, dtype= 1 ):
+def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False ):
     dtypeL = [zz_gdalcon.GDT_Int16,
               zz_gdalcon.GDT_Int32,
               zz_gdalcon.GDT_UInt16,
@@ -143,6 +148,16 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1 ):
         dataOut = driver.Create(full_output_name,inCols,inRows,1, dtypeL[dtype])
         zz_gdalnum.CopyDatasetInfo(inTiff,dataOut)
         bandOut = dataOut.GetRasterBand(1)
+        if nodata ==True or type(nodata)==int or type(nodata) == float:
+            if type(nodata)==int or type(nodata) == float:
+                nodataV = nodata
+            elif dtype>3:#min Value from the floats
+                nodataV = np.finfo(NoDataL[dtype]).min
+            elif dtype<2: #min value from signed Integers
+                nodataV = np.iinfo(NoDataL[dtype]).min
+            else:
+                nodataV = np.iinfo(NoDataL[dtype]).max
+            bandOut.SetNoDataValue(nodataV)
         zz_gdalnum.BandWriteArray(bandOut,data)
         dataOut = None
         bandOut = None

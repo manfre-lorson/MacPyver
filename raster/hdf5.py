@@ -10,7 +10,7 @@ import h5py
 
 
 
-def Help(inhal = ''):#sorted(['get_sub_dataset_names','subnames', 'read_hdf','read_hdf_subset' ])):
+def Help(inhal = ''):
     HelpInhalt =  sorted(['get_sub_dataset_names', 'subnames', 'read_hdf', 'read_hdf_subset','write_hdf','write_hdf_subset'])
     if inhal =='':
         inhal = HelpInhalt
