@@ -136,12 +136,12 @@ try:
             if str(colType[x]) == 'int64':
                 op_list.append(colL[x] + ' integer')
                 #print colL[x] + ' integer, '
-            elif str(colType[x]) == 'float64':
+            elif str(colType[x]) == 'float64' or str(colType[x]) == 'float':
                 op_list.append(colL[x] + ' float')
                 #print colL[x] + ' float, '
             elif str(colType[x]) == 'object':
                 #get max length of the cells in the column
-                leng = data[colL[x]].map(lambda y: len(y)).max()
+                leng = data[colL[x]].map(lambda y: len(str(y))).max()
                 op_list.append(str(colL[x]) + ' varchar(' + str(leng) +')')
                 #print str(colL[x]) + ' varchar(' + str(leng) +'), '
             else:
@@ -149,7 +149,7 @@ try:
         #return sql command and the data; this is used in the function create_pg_Table_load_to_pg
         if write == True:
             sql = "CREATE TABLE IF NOT EXISTS %s (index integer, %s)" % (tablename   , (", ").join(op_list))
-            return sql, data
+            #return sql, data
         #return sql command and the data; this is used in the this function and create_pg_Table, 
         else:
             sql = "CREATE TABLE IF NOT EXISTS %s (%s)" % (tablename   , (", ").join(op_list))

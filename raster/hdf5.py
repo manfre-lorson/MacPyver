@@ -218,7 +218,7 @@ def read_hdf(full_path,sds_name):
     #returns the data from a subdataset as a numpy array
     sds = get_sub_dataset_names(full_path,sds_name) # creates a list of all subdatasets
     if sds != False:
-        hdf = h5py.File(path,'r') # creates the hdf.object
+        hdf = h5py.File(full_path,'r') # creates the hdf.object
         data = hdf[sds][:] # reads the  data from the selected subdataset
         hdf.close() # close the hdf file
         return data 
@@ -250,7 +250,9 @@ def write_hdf(full_path,subdatasetname,  data, write_type = 'a', dtype = 6, ):
               h5py.h5t.NATIVE_FLOAT,h5py.h5t.NATIVE_DOUBLE]
               
     new_hdf = h5py.File(full_path, write_type)
-    dataset = new_hdf.create_dataset(subdatasetname,data.shape, dtypes[dtype])
+    dataset = new_hdf.create_dataset(subdatasetname,data.shape, dtypes[dtype])#, compression="gzip", compression_opts=9)
+    dataset[...] = data
+    #dataset[start_row:end_row, start_line:end_line] = data
     new_hdf.close()
     
     f = new_hdf.create_dataset(subdatasetname,data.shape,dtypes[dtype])
@@ -258,6 +260,7 @@ def write_hdf(full_path,subdatasetname,  data, write_type = 'a', dtype = 6, ):
     dataset[start_row:end_row, start_line:end_line] = data
     new_hdf.close()
     
+    #dset = f.create_dataset("zipped", (100, 100), compression="gzip")
 
 def write_hdf_subset(full_path, subdatasetname, data, start_row = None, end_row = None, start_line = None, end_line = None ):
     f = h5py.File(full_path, 'r+')
