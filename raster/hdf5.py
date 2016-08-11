@@ -36,7 +36,7 @@ def Help(inhal = ''):
             "get_sub_dataset_names":""" get_sub_dataset_names: 
                 returns the list of all subdatasets in the hdf
                 
-                >>> names = get_sub_dataset_names(full_path)
+                >>> names = get_sub_dataset_names(full_path,'')
                 
                 full_path --> path + filename
                 
