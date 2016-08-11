@@ -71,7 +71,8 @@ def Help(inhal = ''):
                                         - 2 --> UInt16
                                         - 3 --> UInt32
                                         - 4 --> Float32
-                                        - 5 --> Float64 
+                                        - 5 --> Float64
+                                        - 6 --> UInt8
                                  --> default is Int32
                 nodata           --> by default there will be no NoData Value asigned
                                        if True:
@@ -106,13 +107,23 @@ def Help(inhal = ''):
 
 
 
-def read_tif(tif,band):
+def read_tif(tif,band,nodata=0):
     inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_ReadOnly)
     band = inTif.GetRasterBand(band)
     data = zz_gdalnum.BandReadAsArray(band)
-    return data
+    if nodata==0:
+        return data
+    elif nodata==1:
+        noda = band.GetNoDataValue()
+        return data, noda
+        
+def set_nodata(tif,band,nodata):
+    inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_Update)
+    band = inTif.GetRasterBand(band)
+    band.SetNoDataValue(nodata)
+    band=None
     
-
+    
 def read_tif_info(tif):
     inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_ReadOnly)
     driver = zz_gdalnum.gdal.GetDriverByName('GTiff')
@@ -120,13 +131,14 @@ def read_tif_info(tif):
     inRows = inTif.RasterYSize
     return inTif, driver, inCols, inRows
     
-def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False ):
+def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, option=False ):
     dtypeL = [zz_gdalcon.GDT_Int16,
               zz_gdalcon.GDT_Int32,
               zz_gdalcon.GDT_UInt16,
               zz_gdalcon.GDT_UInt32,
               zz_gdalcon.GDT_Float32, 
-              zz_gdalcon.GDT_Float64]
+              zz_gdalcon.GDT_Float64,
+              zz_gdalcon.GDT_Byte]
     '''writes data to a tiff and writes the srid infos ot it
         file_with_srid --> original file which has geoinformation
         full_output_name --> path + filename + .tiff
@@ -140,29 +152,38 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False ):
                     - 3 --> UInt32
                     - 4 --> Float32
                     - 5 --> Float64
-        
+                    - 6 --> Byte
         produces a new tiff
+        
+        option = 'COMPRESS=DEFLATE'
     '''
     try:
         inTiff, driver, inCols, inRows = read_tif_info(file_with_srid)
-        dataOut = driver.Create(full_output_name,inCols,inRows,1, dtypeL[dtype])
+        if option != False:
+            dataOut = driver.Create(full_output_name,inCols,inRows,1, dtypeL[dtype],options=[option])           
+        else:
+            dataOut = driver.Create(full_output_name,inCols,inRows,1, dtypeL[dtype])
         zz_gdalnum.CopyDatasetInfo(inTiff,dataOut)
         bandOut = dataOut.GetRasterBand(1)
         if nodata ==True or type(nodata)==int or type(nodata) == float:
             if type(nodata)==int or type(nodata) == float:
                 nodataV = nodata
             elif dtype>3:#min Value from the floats
-                nodataV = np.finfo(NoDataL[dtype]).min
+                nodataV = np.finfo(dtype).min
             elif dtype<2: #min value from signed Integers
-                nodataV = np.iinfo(NoDataL[dtype]).min
+                nodataV = np.iinfo(dtype).min
             else:
-                nodataV = np.iinfo(NoDataL[dtype]).max
+                nodataV = np.iinfo(dtype).max
             bandOut.SetNoDataValue(nodataV)
         zz_gdalnum.BandWriteArray(bandOut,data)
         dataOut = None
         bandOut = None
     except:
         print "coundn't execute write_tiff"
+        
+    
+        
+#dstImg = driver.Create(dstName, srcImg.RasterXSize, srcImg.RasterYSize, 1, gdal.GDT_Int32, options = [ 'COMPRESS=DEFLATE' ])
         
 
     
