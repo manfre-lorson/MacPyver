@@ -11,7 +11,7 @@ import osgeo.gdalconst as zz_gdalcon
 
 
 def Help(inhal = ''):
-    HelpInhalt =  sorted(['read_tif', 'read_tif_info', 'write_tif'])
+    HelpInhalt =  sorted(['set_nodata','read_tif', 'read_tif_info', 'write_tif'])
     if inhal =='':
         inhal = HelpInhalt
     inhalt = inhal
@@ -29,11 +29,18 @@ def Help(inhal = ''):
             __________________________________________________
                 
                 How to use the functions:
-                __________
-                
-                __________________________________________
                 
              """,
+            "set_nodata":"""set_nodata(fullPath,band,nodata)
+            
+                >>> set_nodata(fullPath,1,-9999)
+                
+                fullPath --> full path plus the filename
+                band     --> band to work with
+                nodata   --> nodata value
+                
+    ______________________________________________________________________
+            """,             
              
             "read_tif":"""read_tif:       
                 to read a tif into python
@@ -59,7 +66,7 @@ def Help(inhal = ''):
             "write_tif":"""write_tif:      
                 write data to tif
                 
-                >>> write_tif(file_with_srid, full_output_name, data, 1, nodata=False)
+                >>> write_tif(file_with_srid, full_output_name, data, 1, nodata=False, option=False)
                 
                 file_wite_srid   --> the original file with spatial infromations
                 full_output_name --> path + filename + tile type e.g.: r'c:\\temp\\file1.tif'
@@ -79,6 +86,7 @@ def Help(inhal = ''):
                                           it will put the max Value for Unsigned Integers
                                           it will put the min Value for signed Integers and floats
                                        if you put a Value --> this Value will be the NoData Value
+                option           --> "COMPRESS=DEFLATE"
 
                 ______________________________________________________________________
             """}
