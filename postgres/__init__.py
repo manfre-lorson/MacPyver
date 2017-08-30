@@ -149,7 +149,7 @@ try:
         #return sql command and the data; this is used in the function create_pg_Table_load_to_pg
         if write == True:
             sql = "CREATE TABLE IF NOT EXISTS %s (index integer, %s)" % (tablename   , (", ").join(op_list))
-            #return sql, data
+            return sql, data
         #return sql command and the data; this is used in the this function and create_pg_Table, 
         else:
             sql = "CREATE TABLE IF NOT EXISTS %s (%s)" % (tablename   , (", ").join(op_list))
