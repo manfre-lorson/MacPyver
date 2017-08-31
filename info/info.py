@@ -128,7 +128,7 @@ def timestr():
     return ti
 
 def time():
-    ti = datatime.now()
+    ti = datetime.now()
     return ti
 
 def hostname():
