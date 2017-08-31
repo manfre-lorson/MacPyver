@@ -5,8 +5,13 @@ Created on Thu Feb 25 15:12:36 2016
 @author: Floiran Wolf
 """
 
+import sys
+
+import numpy as np
+
 import osgeo.gdalnumeric as zz_gdalnum
 import osgeo.gdalconst as zz_gdalcon
+
 
 
 
@@ -71,7 +76,7 @@ def Help(inhal = ''):
                 file_wite_srid   --> the original file with spatial infromations
                 full_output_name --> path + filename + tile type e.g.: r'c:\\temp\\file1.tif'
                 data             --> data you want to write to tif
-                dtype            --> Output data type (int, float ...) 
+                dtype            --> Output data type (int, float ...)
                                      input number between 0 and 5:
                                         - 0 --> Int16
                                         - 1 --> Int32
@@ -112,10 +117,17 @@ def Help(inhal = ''):
         for ele in HelpInhalt:
             print myDic[ele]
 
+###############################################################################
+###############################################################################
 
 
 
-def read_tif(tif,band,nodata=0):
+###############################################################################
+####                            Functions                                  ####
+###############################################################################
+
+def read_tif(tif,band=1,nodata=0):
+    #default band is 1 and default for return nodata value is False ~ 0 ;1 ~ True
     inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_ReadOnly)
     band = inTif.GetRasterBand(band)
     data = zz_gdalnum.BandReadAsArray(band)
@@ -126,25 +138,29 @@ def read_tif(tif,band,nodata=0):
         return data, noda
 
 def set_nodata(tif,band,nodata):
+    #update a raster --> burn nodata value to raster
     inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_Update)
     band = inTif.GetRasterBand(band)
     band.SetNoDataValue(nodata)
     band=None
 
 def read_tif_info(tif):
+    # to get the infos from the raster \
+    # returns the raster object, the driver, nr of cloumns and rows
     inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_ReadOnly)
     driver = zz_gdalnum.gdal.GetDriverByName('GTiff')
     inCols = inTif.RasterXSize
     inRows = inTif.RasterYSize
     return inTif, driver, inCols, inRows
+    
 
-def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, option=False ):
-    dtypeL = [zz_gdalcon.GDT_Int16,
-              zz_gdalcon.GDT_Int32,
-              zz_gdalcon.GDT_UInt16,
+def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, option='' ):
+    dtypeL = [zz_gdalcon.GDT_Int16, 
+              zz_gdalcon.GDT_Int32, 
+              zz_gdalcon.GDT_UInt16, 
               zz_gdalcon.GDT_UInt32,
-              zz_gdalcon.GDT_Float32,
-              zz_gdalcon.GDT_Float64,
+              zz_gdalcon.GDT_Float32, 
+              zz_gdalcon.GDT_Float64, 
               zz_gdalcon.GDT_Byte]
     '''writes data to a tiff and writes the srid infos ot it
         file_with_srid --> original file which has geoinformation
@@ -162,56 +178,12 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, opt
                     - 6 --> Byte
         produces a new tiff
 
-        option = 'COMPRESS=DEFLATE'
+        option = 'COMPRESS=DEFLATE' (gdal like options (-co "NAME=VALUE"))
+        
+        if the passed data has more the onw band all bands will be written to the output
+        
     '''
-    try:
-        inTiff, driver, inCols, inRows = read_tif_info(file_with_srid)
-        if option != False:
-            dataOut = driver.Create(full_output_name,inCols,inRows,1, dtypeL[dtype],options=[option])
-        else:
-            dataOut = driver.Create(full_output_name,inCols,inRows,1, dtypeL[dtype])
-        zz_gdalnum.CopyDatasetInfo(inTiff,dataOut)
-        bandOut = dataOut.GetRasterBand(1)
-        if nodata ==True or type(nodata)==int or type(nodata) == float:
-            if type(nodata)==int or type(nodata) == float:
-                nodataV = nodata
-            elif dtype>3:#min Value from the floats
-                nodataV = np.finfo(dtype).min
-            elif dtype<2: #min value from signed Integers
-                nodataV = np.iinfo(dtype).min
-            else:
-                nodataV = np.iinfo(dtype).max
-            bandOut.SetNoDataValue(nodataV)
-        zz_gdalnum.BandWriteArray(bandOut,data)
-        dataOut = None
-        bandOut = None
-    except:
-        print "coundn't execute write_tiff"
-
-
-#dstImg = driver.Create(dstName, srcImg.RasterXSize, srcImg.RasterYSize, 1, gdal.GDT_Int32, options = [ 'COMPRESS=DEFLATE' ])
-
-def write_tif_bands(file_with_srid,full_output_name, data, dtype= 1, nodata=False, option=False ):
-    dtypeL = [zz_gdalcon.GDT_Int16, zz_gdalcon.GDT_Int32, zz_gdalcon.GDT_UInt16, zz_gdalcon.GDT_UInt32,
-              zz_gdalcon.GDT_Float32, zz_gdalcon.GDT_Float64, zz_gdalcon.GDT_Byte]
-    '''writes data to a tiff and writes the srid infos ot it
-        file_with_srid --> original file which has geoinformation
-        full_output_name --> path + filename + .tiff
-        data_to_write --> your new calculated data
-
-        dtype --> define the output datatype default is Int32:
-                imput number between 0 and 5:
-                    - 0 --> Int16
-                    - 1 --> Int32
-                    - 2 --> UInt16
-                    - 3 --> UInt32
-                    - 4 --> Float32
-                    - 5 --> Float64
-                    - 6 --> Byte
-        produces a new tiff
-
-        option = 'COMPRESS=DEFLATE'
-    '''
+    
     try:
         inTiff, driver, inCols, inRows = read_tif_info(file_with_srid)
         if len(data.shape)==3:
@@ -222,10 +194,9 @@ def write_tif_bands(file_with_srid,full_output_name, data, dtype= 1, nodata=Fals
             print('error in Bands')
             sys.exit(1)
         #print(nr_of_bands)
-        if option != False:
-            dataOut = driver.Create(full_output_name,inCols,inRows,nr_of_bands, dtypeL[dtype],options=[option])
-        else:
-            dataOut = driver.Create(full_output_name,inCols,inRows,nr_of_bands, dtypeL[dtype])
+            
+        dataOut = driver.Create(full_output_name,inCols,inRows,nr_of_bands, dtypeL[dtype],options=[option])
+        
         zz_gdalnum.CopyDatasetInfo(inTiff,dataOut)
         for band in range(nr_of_bands):
             bandOut = dataOut.GetRasterBand(band+1)
@@ -237,5 +208,9 @@ def write_tif_bands(file_with_srid,full_output_name, data, dtype= 1, nodata=Fals
                 zz_gdalnum.BandWriteArray(bandOut,data[band,:,:])
             bandOut = None
         dataOut = None
+    except IOError as e:
+        print "I/O error({0}): {1}".format(e.errno, e.strerror)
+    except ValueError:
+        print ("Could not write the nodata value")
     except:
-        print "coundn't execute write_tiff"
+        print "Unexpected error:", sys.exc_info()
