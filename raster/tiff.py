@@ -7,8 +7,6 @@ Created on Thu Feb 25 15:12:36 2016
 
 import sys
 
-import numpy as np
-
 import osgeo.gdalnumeric as zz_gdalnum
 import osgeo.gdalconst as zz_gdalcon
 
@@ -92,6 +90,8 @@ def Help(inhal = ''):
                                           it will put the min Value for signed Integers and floats
                                        if you put a Value --> this Value will be the NoData Value
                 option           --> "COMPRESS=DEFLATE"
+                
+                
 
                 ______________________________________________________________________
             """}
@@ -127,15 +127,22 @@ def Help(inhal = ''):
 ###############################################################################
 
 def read_tif(tif,band=1,nodata=0):
-    #default band is 1 and default for return nodata value is False ~ 0 ;1 ~ True
-    inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_ReadOnly)
-    band = inTif.GetRasterBand(band)
-    data = zz_gdalnum.BandReadAsArray(band)
-    if nodata==0:
-        return data
-    elif nodata==1:
-        noda = band.GetNoDataValue()
-        return data, noda
+    try:
+        #default band is 1 and default for return nodata value is False ~ 0 ;1 ~ True
+        inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_ReadOnly)
+        if type(inTif)=='NoneType':
+            band = inTif.GetRasterBand(band)
+            data = zz_gdalnum.BandReadAsArray(band)
+            if nodata==0:
+                return data
+            elif nodata==1:
+                noda = band.GetNoDataValue()
+                return data, noda
+        else:
+            raise NameError('input is not a file')
+    except:
+        print "Error:", sys.exc_info()[:2]
+        raise
 
 def set_nodata(tif,band,nodata):
     #update a raster --> burn nodata value to raster
