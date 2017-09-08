@@ -134,7 +134,7 @@ def read_tif(tif,band=1,nodata=0):
             band = inTif.GetRasterBand(band)
             data = zz_gdalnum.BandReadAsArray(band)
             if type(data)==None.__class__:
-                raise NameError('input is broken')
+                raise 
             else:
                 if nodata==0:
                     return data
@@ -142,7 +142,7 @@ def read_tif(tif,band=1,nodata=0):
                     noda = band.GetNoDataValue()
                     return data, noda
         else:
-            raise NameError('input is not a file')
+            raise NameError('input is not a file or file is broken')
     except:
         print "Error:", sys.exc_info()[:2]
         raise
