@@ -130,7 +130,7 @@ def read_tif(tif,band=1,nodata=0):
     try:
         #default band is 1 and default for return nodata value is False ~ 0 ;1 ~ True
         inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_ReadOnly)
-        if type(inTif)=='NoneType':
+        if type(inTif)!='NoneType':
             band = inTif.GetRasterBand(band)
             data = zz_gdalnum.BandReadAsArray(band)
             if type(data)==None.__class__:
