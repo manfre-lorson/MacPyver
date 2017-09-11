@@ -133,6 +133,7 @@ def read_tif(tif,band=1,nodata=0):
         if type(inTif)!='NoneType':
             band = inTif.GetRasterBand(band)
             data = zz_gdalnum.BandReadAsArray(band)
+            inTif = None
             if type(data)==None.__class__:
                 raise 
             else:
@@ -145,6 +146,7 @@ def read_tif(tif,band=1,nodata=0):
             raise NameError('input is not a file or file is broken')
     except:
         print "Error:", sys.exc_info()[:2]
+        inTif = None
         raise
 
 def set_nodata(tif,band,nodata):
@@ -153,6 +155,7 @@ def set_nodata(tif,band,nodata):
     band = inTif.GetRasterBand(band)
     band.SetNoDataValue(nodata)
     band=None
+    inTif = None
 
 def read_tif_info(tif):
     # to get the infos from the raster \
