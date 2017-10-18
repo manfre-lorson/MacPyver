@@ -16,44 +16,44 @@ def Help(inhal = ''):
         cList.append(inhalt)
         cList.append("nix")
         inhalt = cList
-    
-        
-    myDic = {"header": """        
+
+
+    myDic = {"header": """
             __________________________________________________
             ###              MacPyver.postgres             ###
             ###   The Swissknife like Python-Package for   ###
             ###        work in general and with GIS        ###
             __________________________________________________
-                
+
                 How to use the functions:
                 __________
-                
+
                 __________________________________________
-                
+
              """,
-             
-            "create_pg_Table_sql_command":"""create_pg_Table_sql_command:       
+
+            "create_pg_Table_sql_command":"""create_pg_Table_sql_command:
                 returns the executable SQL command for postgres
-                
+
                 >>> create_pg_Table_sql_command(fullpath, tablename, sep=';', header=0)
-                
+
                 fullPath  --> full path plus the filename
                 tablename --> table name for the new table
                 sep       --> default sep is ;
                 header    --> default header is the first line in the csv
-                
+
 
                 ______________________________________________________________________
             """,
-            
-            "create_pg_Table":"""create_pg_Table:  
+
+            "create_pg_Table":"""create_pg_Table:
                 creates a table in the postgres database
-                
-                >>> create_pg_Table(full_path, tablename, host, 
-                                    user, password, dbname, 
-                                    schema='public', port=5432, 
+
+                >>> create_pg_Table(full_path, tablename, host,
+                                    user, password, dbname,
+                                    schema='public', port=5432,
                                     sep=';', header=0):
-                
+
                 fullPath  --> full path plus the filename
                 tablename --> table name for the new table
                 host      --> database host
@@ -67,16 +67,16 @@ def Help(inhal = ''):
 
                 ______________________________________________________________________
             """,
-                     
-            "create_pg_Table_load_to_pg":"""create_pg_Table_load_to_pg:  
-                creates a table in the postgres database and loads the data to the 
+
+            "create_pg_Table_load_to_pg":"""create_pg_Table_load_to_pg:
+                creates a table in the postgres database and loads the data to the
                 database
-                
-                >>> create_pg_Table_load_to_pg(full_path, tablename, host, 
-                                    user, password, dbname, 
-                                    schema='public', port=5432, 
+
+                >>> create_pg_Table_load_to_pg(full_path, tablename, host,
+                                    user, password, dbname,
+                                    schema='public', port=5432,
                                     sep=';', header=0):
-                
+
                 fullPath  --> full path plus the filename
                 tablename --> table name for the new table
                 host      --> database host
@@ -90,7 +90,7 @@ def Help(inhal = ''):
 
                 ______________________________________________________________________
             """}
-            
+
     print myDic["header"]
     counter = 0
     inhalt.sort()
@@ -105,18 +105,18 @@ def Help(inhal = ''):
     if counter >0:
         op = sorted(list(set(op)))
         for ele in op:
-            print myDic[ele]   
+            print myDic[ele]
     elif counter == 0:
         print ">>> Fehler: Wort nicht gefunden <<<"
-        print ""      
+        print ""
         for ele in HelpInhalt:
-            print myDic[ele]       
+            print myDic[ele]
 
 
 try:
     import psycopg2 as pg
     import pandas as pd
-    from sqlalchemy import create_engine 
+    from sqlalchemy import create_engine
 
 
     def create_pg_Table_sql_command(full_path, tablename, sep=';', header=0, write= False):
@@ -150,14 +150,14 @@ try:
         if write == True:
             sql = "CREATE TABLE IF NOT EXISTS %s (index integer, %s)" % (tablename   , (", ").join(op_list))
             return sql, data
-        #return sql command and the data; this is used in the this function and create_pg_Table, 
+        #return sql command and the data; this is used in the this function and create_pg_Table,
         else:
             sql = "CREATE TABLE IF NOT EXISTS %s (%s)" % (tablename   , (", ").join(op_list))
             return sql
-        
-    
+
+
     def create_pg_Table(full_path, tablename, host, user, password, dbname, schema='public', port=5432, sep=';', header=0 ):
-        #get the sql command         
+        #get the sql command
         sql = create_pg_Table_sql_command(full_path, tablename, sep, header, write= False)
         #create the connection string for the database
         pg_conn_str = "host=%s port=%d user=%s password=%s dbname=%s" % (host, port, user, password, dbname)
@@ -175,7 +175,7 @@ try:
             print 'table exists already'
         pg_conn.close()
 
-    
+
     def create_pg_Table_load_to_pg(full_path, tablename, host, user, password, dbname, schema='public', port=5432, sep=';', header=0, ):
         #get the sql command and the data from the given table
         sql, data = create_pg_Table_sql_command(full_path, tablename, sep=sep, header=header, write= True)
@@ -198,6 +198,7 @@ try:
         #append the data to the created table
         data.to_sql(tablename,engine,if_exists='append')
         pg_conn.close()
-    
+
 except ImportError, e:
+    print("no postgres support")
     pass # module doesn't exist, deal with it.
