@@ -167,7 +167,7 @@ def read_tif_info(tif):
     return inTif, driver, inCols, inRows
     
 
-def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, option='' ):
+def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, option=False ):
     dtypeL = [zz_gdalcon.GDT_Int16, 
               zz_gdalcon.GDT_Int32, 
               zz_gdalcon.GDT_UInt16, 
@@ -207,9 +207,11 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, opt
             print('error in Bands')
             sys.exit(1)
         #print(nr_of_bands)
-            
-        dataOut = driver.Create(full_output_name,inCols,inRows,nr_of_bands, dtypeL[dtype],options=[option])
         
+        if option:            
+            dataOut = driver.Create(full_output_name,inCols,inRows,nr_of_bands, dtypeL[dtype],options=[option])
+        else:
+            dataOut = driver.Create(full_output_name,inCols,inRows,nr_of_bands, dtypeL[dtype])
         zz_gdalnum.CopyDatasetInfo(inTiff,dataOut)
         for band in range(nr_of_bands):
             bandOut = dataOut.GetRasterBand(band+1)
