@@ -90,8 +90,6 @@ def Help(inhal = ''):
                                           it will put the min Value for signed Integers and floats
                                        if you put a Value --> this Value will be the NoData Value
                 option           --> "COMPRESS=DEFLATE"
-                
-                
 
                 ______________________________________________________________________
             """}
@@ -135,7 +133,7 @@ def read_tif(tif,band=1,nodata=0):
             data = zz_gdalnum.BandReadAsArray(band)
             inTif = None
             if type(data)==None.__class__:
-                raise 
+                raise
             else:
                 if nodata==0:
                     return data
@@ -192,11 +190,11 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, opt
         produces a new tiff
 
         option = 'COMPRESS=DEFLATE' (gdal like options (-co "NAME=VALUE"))
-        
+
         if the passed data has more the onw band all bands will be written to the output
-        
+
     '''
-    
+
     try:
         inTiff, driver, inCols, inRows = read_tif_info(file_with_srid)
         if len(data.shape)==3:
@@ -207,16 +205,7 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, opt
             print('error in Bands')
             sys.exit(1)
         #print(nr_of_bands)
-<<<<<<< HEAD
-=======
-        
-	if option:
-            dataOut = driver.Create(full_output_name,inCols,inRows,nr_of_bands, dtypeL[dtype],options=[option])
-	else:
-	    dataOut = driver.Create(full_output_name,inCols,inRows,nr_of_bands, dtypeL[dtype])
->>>>>>> 4624a1762f3209b967cbd6922dbcd67344d61aa2
-        
-        if option:            
+        if option:
             dataOut = driver.Create(full_output_name,inCols,inRows,nr_of_bands, dtypeL[dtype],options=[option])
         else:
             dataOut = driver.Create(full_output_name,inCols,inRows,nr_of_bands, dtypeL[dtype])
