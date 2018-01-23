@@ -90,7 +90,7 @@ def README():
 
     print myDic["header"]
     
-    def outname(path, new_name_part = False , extension = False):
+def outname(path, new_name_part = False , extension = False):
     no_change = path[:path.rfind('.')]
     if new_name_part == False and extension == False:
         print 'error in naming, input is the same as output'
