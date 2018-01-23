@@ -19,38 +19,38 @@ def Help(inhal = ''):
         cList.append(inhalt)
         cList.append("nix")
         inhalt = cList
-        
-    myDic = {"header": """  
+
+    myDic = {"header": """
             __________________________________________________
             ###               MacPyver.info                ###
             ###   The Swissknife like Python-Package for   ###
             ###        work in general and with GIS        ###
             __________________________________________________
-                
+
                 How to use the functions:
                 __________
-                
+
              """,
-             
-            "timestr":""" timestr: 
+
+            "timestr":""" timestr:
                 returns the time as a string
-                
+
                 >>> timestr()
-                
+
  _______________________________________________________________________________
             """,
-            
-            "time":""" time:  
-                returns the time to calculate 
-                
+
+            "time":""" time:
+                returns the time to calculate
+
                 >>> time()
-                
+
  _______________________________________________________________________________
             """,
-                     
-            "hostname":""" hostname:      
+
+            "hostname":""" hostname:
                 returns the hostname where you are running the Python
-                
+
                 >>>hostname()
 
  _______________________________________________________________________________
@@ -59,10 +59,10 @@ def Help(inhal = ''):
                 returns the number of Folders in the directory
 
         >>>folderCount(fillpath, wildcard= "*",position = "m")
-        
+
         fullpath --> path to the folder
         wildcard --> if not set, it will use '*' as default
-        position --> to specify the wildcard 
+        position --> to specify the wildcard
                  by default m --> '*'
                  options:
                      s --> startswith 'name*'
@@ -73,30 +73,30 @@ def Help(inhal = ''):
 
  _______________________________________________________________________________
             """,
-            
-            "getsizeMB":""" getsizeMB:  
+
+            "getsizeMB":""" getsizeMB:
                 raturns the size of a file or folder in MB
 
         >>>getsizeMB(fullpath)
 
         fullpath --> full path to file or folder
-                
+
  _______________________________________________________________________________
             """,
-            
+
             "glob_rec":""" glob_rec:
                 returns a list of all files in the path which match
-                wildcard option
-                
+                wildcard option default wildcard is: '*'
+
         >>files=glob_rec(fullpath,'wildcard')
-        
+
         fullpath --> full path to folder
         wildcard --> '*something*else*.tif' has to have the *
-        
+
 _______________________________________________________________________________
-            """            
+            """
             }
-            
+
     print myDic["header"]
     counter = 0
     inhalt.sort()
@@ -111,14 +111,14 @@ _______________________________________________________________________________
     if counter >0:
         op = sorted(list(set(op)))
         for ele in op:
-            print myDic[ele]   
+            print myDic[ele]
     elif counter == 0:
         print "     >>> Error: no function with %r <<<" % inhal
-        print "" 
-        print "     all available function: " 
+        print ""
+        print "     all available function: "
         for ele in HelpInhalt:
-            print myDic[ele]       
-    
+            print myDic[ele]
+
 '''________________________________END-DIC______________________________________'''
 
 
@@ -141,11 +141,11 @@ def folderCount(path, wildcard= "*",position = "m"):
     """ 
     retuns the count of folders or files in a folder
 
-    with no given wildcard it uses * 
+    with no given wildcard it uses *
     with given wildcard the default is "*wildcard*"
     if you need to specify the wildcard you can use:
-          s for wildcard starts with --> str*  or  
-          e for wildcard ends with     --> *.tif 
+          s for wildcard starts with --> str*  or
+          e for wildcard ends with     --> *.tif
     """
     if path[-1] != "/" or path[-1]!="\\":
         path = path+"/"
@@ -157,14 +157,14 @@ def folderCount(path, wildcard= "*",position = "m"):
         wildcard == "*"+wildcard
     count = len(glob(path+wildcard))
     return count
-        
+
 def getsizeMB(fullpath):
     size = ("%.2f" % (os.path.getsize(fullpath)/1024/1024.0))
     return size
 
-""" to calc the cksum to check if the filese are fine 
+""" to calc the cksum to check if the filese are fine
     for the Modis data"""
-    
+
 crctab = [ 0x00000000, 0x04c11db7, 0x09823b6e, 0x0d4326d9, 0x130476dc,
         0x17c56b6b, 0x1a864db2, 0x1e475005, 0x2608edb8, 0x22c9f00f,
         0x2f8ad6d6, 0x2b4bcb61, 0x350c9b64, 0x31cd86d3, 0x3c8ea00a,
@@ -234,10 +234,11 @@ def cksum(path):
         n = n >> 8
         s = UNSIGNED(s << 8) ^ crctab[(s >> 24) ^ c]
     return UNSIGNED(~s)
-    
-	
-def glob_rec(path,wildcard):
-    """works like glob just with the recursive option"""
+
+
+def glob_rec(path,wildcard='*'):
+    """works like glob just with the recursive option
+       default wildcard is '*' """
     matches = []
     for root, dirnames, filenames in os.walk(path):
         for filename in fnmatch.filter(filenames, wildcard):

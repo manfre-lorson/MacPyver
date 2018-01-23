@@ -40,11 +40,10 @@ import postgres
 
 
 
-
 def README():
-    myDic = {"header": """  
-      
-      
+    myDic = {"header": """
+
+
       #########################################################################
       ##                                                                     ##
       ##                                                                     ##
@@ -62,31 +61,56 @@ def README():
       ##  _________________________________________________________________  ##
       ##                                                                     ##
       #########################################################################
-      
-      
-      
+
+
+
              Until now the Package provides the Subpackages:
-                   
+
                    --> info
-                   
+
                    --> send eMails
-                   
+
                    --> raster work (common Filetypes and hdf5)
-               
+
                    --> PostgreSQL
-                   
-               
-              To see the functions in the Subpackages navigate into 
+
+
+              To see the functions in the Subpackages navigate into
               the Subpackage and call the Help() function
-               
-              Inside the Help() you see the "HOW TO WORK" with the functions" 
-              
-              
-              
-               
+
+              Inside the Help() you see the "HOW TO WORK" with the functions"
+
+
+
+
       ######################################################################### 
       #########################################################################
-         
+
       """}
-            
+
     print myDic["header"]
+    
+def outname(path, new_name_part = False , extension = False):
+    '''this function is to rename / create output name for files
+        the new_name_part will be added to the orig filename, 
+        the extension is the new, if wanted
+        if not, its the same like the input
+        new_name_part or extension has to be given'''
+        
+    no_change = path[:path.rfind('.')] #split on last point in string
+    if new_name_part == False and extension == False: #checjk if new_name_part and extension are give
+        print 'error in naming, input is the same as output'
+        return False
+    if extension == False: #if no extension is given, take the on from the input file
+        extension = path[path.rfind('.'):]
+    if extension.startswith('.'): #remove . from the extension if given
+        extension = extension[1:]
+    if new_name_part == False: #if new_name_part is not given assign empty string to the variable
+        new_name_part = ''
+    if new_name_part.startswith('_'): #if given check if it starts with _ if yes, remove it
+        new_name_part = new_name_part[1:]
+    outname = no_change+'_'+new_name_part+'.'+extension #put all things together
+    if path == outname: #check if new outname is equal to input
+        print 'error in naming, input is the same as output'
+        return False
+    return outname #return the new name

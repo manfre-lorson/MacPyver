@@ -165,15 +165,15 @@ def read_tif_info(tif):
     inCols = inTif.RasterXSize
     inRows = inTif.RasterYSize
     return inTif, driver, inCols, inRows
-    
+
 
 def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, option=False ):
-    dtypeL = [zz_gdalcon.GDT_Int16, 
-              zz_gdalcon.GDT_Int32, 
-              zz_gdalcon.GDT_UInt16, 
+    dtypeL = [zz_gdalcon.GDT_Int16,
+              zz_gdalcon.GDT_Int32,
+              zz_gdalcon.GDT_UInt16,
               zz_gdalcon.GDT_UInt32,
-              zz_gdalcon.GDT_Float32, 
-              zz_gdalcon.GDT_Float64, 
+              zz_gdalcon.GDT_Float32,
+              zz_gdalcon.GDT_Float64,
               zz_gdalcon.GDT_Byte]
     '''writes data to a tiff and writes the srid infos ot it
         file_with_srid --> original file which has geoinformation
@@ -207,6 +207,14 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, opt
             print('error in Bands')
             sys.exit(1)
         #print(nr_of_bands)
+<<<<<<< HEAD
+=======
+        
+	if option:
+            dataOut = driver.Create(full_output_name,inCols,inRows,nr_of_bands, dtypeL[dtype],options=[option])
+	else:
+	    dataOut = driver.Create(full_output_name,inCols,inRows,nr_of_bands, dtypeL[dtype])
+>>>>>>> 4624a1762f3209b967cbd6922dbcd67344d61aa2
         
         if option:            
             dataOut = driver.Create(full_output_name,inCols,inRows,nr_of_bands, dtypeL[dtype],options=[option])
