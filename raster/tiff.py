@@ -303,63 +303,31 @@ def raster2extent(data_path, dst_extent, nodata = False):
     #fill empty raster with noData value
     newdata = np.where(newdata ==0 , noData, noData)
     
+    #get the mx dimensions of the raster and borders to slice
     if x_offset < 0:
         data = data[:,abs(x_offset):abs(x_offset)+newdata.shape[1]]
         x_offset = 0
-    
     if y_offset < 0:
         data = data[abs(y_offset):abs(y_offset)+newdata.shape[0],:]
         y_offset = 0
-    
-
     if y_offset+data.shape[0]>newdata.shape[0]:
         y_max = newdata.shape[0]
     else:
         y_max = y_offset+data.shape[0]
-    
-    
     if x_offset+data.shape[1]>newdata.shape[1]:
         x_max = newdata.shape[1]
     else:
-        x_max = x_offset+data.shape[1]
-        
+        x_max = x_offset+data.shape[1]   
     if x_offset+data.shape[1]>data.shape[1]:
         x_slice = -(x_offset+data.shape[1]-x_max)
     else:
         x_slice = data.shape[1]
-
     if y_offset+data.shape[0]>y_max:
         y_slice = -(y_offset+data.shape[0]-y_max)
     else:
         y_slice = data.shape[0]
 
-    
     #insert data to out dataset
     newdata[ y_offset:y_max, x_offset:x_max] = data[ : y_slice, : x_slice]
     return newdata
     
-    
-    
-'''
-import MacPyver as mp
-
-
-data_big_path = r'D:\IPBES_work\biodiverity_models\test\SSP1xRCP2.6_cSAR_degree_2015-2050_CC_DC_0_per_mean_nr1.tif'
-
-data_small_path = r'D:\IPBES_work\biodiverity_models\test\SSP1xRCP2.6_cSAR_degree_2015-2050_CC_DC_0_per_mean.tif'
-
-data_big = mp.raster.tiff.read_tif(data_big_path)
-
-data_small = mp.raster.tiff.read_tif(data_small_path)
-
-new = mp.raster.tiff.raster2extent(data_big_path, data_small_path)
-
-mp.raster.tiff.write_tif(data_small_path, data_small_path[:-4]+'_clip6.tif', new, 4)
-
-
-data_path = data_big_path
-dst_extent = data_small_path
-
-src_extent.ret
-
-'''
