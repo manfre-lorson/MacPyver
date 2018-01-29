@@ -6,6 +6,7 @@ Created on Thu Feb 25 15:12:36 2016
 """
 
 import sys
+import numpy as np
 
 import osgeo.gdalnumeric as zz_gdalnum
 import osgeo.gdalconst as zz_gdalcon
@@ -226,3 +227,139 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, opt
         print ("Could not write the nodata value")
     except:
         print "Unexpected error:", sys.exc_info()
+        
+        
+####################################################################################
+ 
+
+class extent():
+    def __init__(self, coordinates = False, quite = False):
+        if coordinates:
+            if len(coordinates)==5:
+                for x in coordinates:
+                    if isinstance(x, (float, int)) == False:
+                        print "Error in given coordinates, at least one given value is not a number" 
+                        print "all values set to zero"
+                self.left, self.top, self.columns, self.rows, self.px_size = coordinates
+        else:
+            self.left=0
+            self.top=0
+            self.columns=0
+            self.rows = 0
+            self.px_size = 0
+            if quite == False:
+                print "WARNING: all extent values are set to zero"
+        
+    def ret_extent(self):
+        return (self.left, self.top, self.columns, self.rows, self.px_size)
+
+
+        
+def get_extent(data_path):
+    #path to be read in
+    intif, driver, columns, rows = read_tif_info(data_path)
+    #get info from raster
+    left, px_x_size, tilt_x, top, tilt_y, px_y_size = intif.GetGeoTransform()
+    intif, driver = [None]*2
+    if abs(px_x_size) != abs(px_y_size):
+        print "x-pixel-size is not equal to y-pixel-size"
+        return False
+    else:
+        data_extent = extent((left, top, columns, rows, px_x_size))
+        return data_extent
+        
+
+
+
+def raster2extent(data_path, dst_extent, nodata = False):
+    #get extentdata from source / data_path or from extent class
+    src_extent = get_extent(data_path)
+    dst_extent = get_extent(dst_extent)
+
+    #check if dst_extent is the right format
+    #if len(dst_extent)!=5:
+    #    print "ERROR: given extent do's not match needed pattern {0}".format("extent = (left, top, columns, rows, px_size)")
+    if dst_extent.px_size != src_extent.px_size:
+        print "ERROR: pixel-size dosent match / you need to resample one of the files; src: {0} != dst: {1}".format(src_extent.px_size, dst_extent.px_size)
+    
+    data = read_tif(data_path)
+
+    x_offset = (src_extent.left-dst_extent.left)*src_extent.px_size
+    #right_x_mismatch = src_extent[2]*src_extent[-1] -  (left_x_mismatch+dst_extent[2]*dst_extent[-1]) 
+    
+    y_offset = (dst_extent.top-src_extent.top)*src_extent.px_size
+    #bottom_mismatch = src_extent[1]*src_extent[3]*src_extent[-1]- (top_y_mismatch+dst_extent[2]*dst_extent[-1])
+    
+    
+    #create empyt out raster 
+    newdata = np.zeros((dst_extent.rows, dst_extent.columns))
+    
+    #assign nodata value
+    if nodata:
+        noData = nodata
+    else:
+        noData = np.nan
+    
+    #fill empty raster with noData value
+    newdata = np.where(newdata ==0 , noData, noData)
+    
+    if x_offset < 0:
+        data = data[:,abs(x_offset):abs(x_offset)+newdata.shape[1]]
+        x_offset = 0
+    
+    if y_offset < 0:
+        data = data[abs(y_offset):abs(y_offset)+newdata.shape[0],:]
+        y_offset = 0
+    
+
+    if y_offset+data.shape[0]>newdata.shape[0]:
+        y_max = newdata.shape[0]
+    else:
+        y_max = y_offset+data.shape[0]
+    
+    
+    if x_offset+data.shape[1]>newdata.shape[1]:
+        x_max = newdata.shape[1]
+    else:
+        x_max = x_offset+data.shape[1]
+        
+    if x_offset+data.shape[1]>data.shape[1]:
+        x_slice = -(x_offset+data.shape[1]-x_max)
+    else:
+        x_slice = data.shape[1]
+
+    if y_offset+data.shape[0]>y_max:
+        y_slice = -(y_offset+data.shape[0]-y_max)
+    else:
+        y_slice = data.shape[0]
+
+    
+    #insert data to out dataset
+    newdata[ y_offset:y_max, x_offset:x_max] = data[ : y_slice, : x_slice]
+    return newdata
+    
+    
+    
+'''
+import MacPyver as mp
+
+
+data_big_path = r'D:\IPBES_work\biodiverity_models\test\SSP1xRCP2.6_cSAR_degree_2015-2050_CC_DC_0_per_mean_nr1.tif'
+
+data_small_path = r'D:\IPBES_work\biodiverity_models\test\SSP1xRCP2.6_cSAR_degree_2015-2050_CC_DC_0_per_mean.tif'
+
+data_big = mp.raster.tiff.read_tif(data_big_path)
+
+data_small = mp.raster.tiff.read_tif(data_small_path)
+
+new = mp.raster.tiff.raster2extent(data_big_path, data_small_path)
+
+mp.raster.tiff.write_tif(data_small_path, data_small_path[:-4]+'_clip6.tif', new, 4)
+
+
+data_path = data_big_path
+dst_extent = data_small_path
+
+src_extent.ret
+
+'''
