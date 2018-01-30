@@ -283,8 +283,8 @@ class extent():
 
     #calc missing corners
     def calc_corners(self):
-        self.right = self.left * self.columns * self.px_size
-        self.bottom = self.top * self.rows * px_size
+        self.right = self.left + self.columns * self.px_size
+        self.bottom = self.top + self.rows * self.px_size
         print 'right:{0} and bottom {1} are stored in the object'.format(self.right, self.bottom)
 
 #returns an object with the extent of the passed image path
