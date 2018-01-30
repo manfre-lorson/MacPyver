@@ -93,7 +93,32 @@ def Help(inhal = ''):
                 option           --> "COMPRESS=DEFLATE"
 
                 ______________________________________________________________________
-            """}
+            """,
+
+            "get_extent":"""get_extent:
+                creates an object with the extent infomation of the passed raster
+
+                >>> ext = get_extent(file_path)
+
+                file_path       --> full path to the file
+                inside are the following parametes:
+                    left, top, columns, rows, px_size
+                ______________________________________________________________________
+            """,
+
+            "raser2extent":"""raster2extent:
+                slice raster to the same extent
+
+                >>> data = raster2extent(data_path, dst_extent, nodata = False)
+
+                data_path       --> full path to file which should be sliced
+                dst_data        --> full path to file which works as the template
+                nodata          --> can be specified to set nodata value in the sliced output
+                                    default is np.nan (to check for np.nan you hav to use
+                                    np.isnan(...)
+                ______________________________________________________________________
+            """
+               }
 
     print myDic["header"]
     counter = 0
@@ -227,11 +252,12 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, opt
         print ("Could not write the nodata value")
     except:
         print "Unexpected error:", sys.exc_info()
-        
-        
-####################################################################################
- 
 
+
+####################################################################################
+
+#create class to store the extent
+#is used by the function get_extent
 class extent():
     def __init__(self, coordinates = False, quite = False):
         if coordinates:
@@ -240,6 +266,7 @@ class extent():
                     if isinstance(x, (float, int)) == False:
                         print "Error in given coordinates, at least one given value is not a number" 
                         print "all values set to zero"
+                        coordinates = [0,0,0,0,0]
                 self.left, self.top, self.columns, self.rows, self.px_size = coordinates
         else:
             self.left=0
@@ -249,12 +276,18 @@ class extent():
             self.px_size = 0
             if quite == False:
                 print "WARNING: all extent values are set to zero"
-        
+
+    #retun list with extent infos
     def ret_extent(self):
         return (self.left, self.top, self.columns, self.rows, self.px_size)
 
+    #calc missing corners
+    def calc_corners(self):
+        self.right = self.left * self.columns * self.px_size
+        self.bottom = self.top * self.rows * px_size
+        print 'right:{0} and bottom {1} are stored in the object'.format(self.right, self.bottom)
 
-        
+#returns an object with the extent of the passed image path
 def get_extent(data_path):
     #path to be read in
     intif, driver, columns, rows = read_tif_info(data_path)
@@ -262,72 +295,67 @@ def get_extent(data_path):
     left, px_x_size, tilt_x, top, tilt_y, px_y_size = intif.GetGeoTransform()
     intif, driver = [None]*2
     if abs(px_x_size) != abs(px_y_size):
-        print "x-pixel-size is not equal to y-pixel-size"
+        print 'ERROR: x-pixel-size is not equal to y-pixel-size'
         return False
     else:
         data_extent = extent((left, top, columns, rows, px_x_size))
         return data_extent
-        
 
 
-
+#generates a raster with the same extent like the passed dst_extent raster
+#to be able to calc with both in a numpy array
+#the input-rasters need to have the same resolution (pixelsize) - (but its checking for that)
 def raster2extent(data_path, dst_extent, nodata = False):
     #get extentdata from source / data_path or from extent class
     src_extent = get_extent(data_path)
     dst_extent = get_extent(dst_extent)
 
-    #check if dst_extent is the right format
-    #if len(dst_extent)!=5:
-    #    print "ERROR: given extent do's not match needed pattern {0}".format("extent = (left, top, columns, rows, px_size)")
-    if dst_extent.px_size != src_extent.px_size:
+    if dst_extent.px_size == src_extent.px_size:
+        data = read_tif(data_path)
+        #calc x offset (left)
+        x_offset = (src_extent.left-dst_extent.left)*src_extent.px_size
+        #calc y offset (top)
+        y_offset = (dst_extent.top-src_extent.top)*src_extent.px_size
+
+        #create empyt out raster
+        newdata = np.zeros((dst_extent.rows, dst_extent.columns))
+        #assign nodata value
+        if nodata:
+            noData = nodata
+        else:
+            noData = np.nan
+
+        #fill empty raster with noData value
+        newdata = np.where(newdata ==0 , noData, noData)
+
+        #get the mx dimensions of the raster and borders to slice
+        if x_offset < 0:
+            data = data[:,abs(x_offset):abs(x_offset)+newdata.shape[1]]
+            x_offset = 0
+        if y_offset < 0:
+            data = data[abs(y_offset):abs(y_offset)+newdata.shape[0],:]
+            y_offset = 0
+        if y_offset+data.shape[0]>newdata.shape[0]:
+            y_max = newdata.shape[0]
+        else:
+            y_max = y_offset+data.shape[0]
+        if x_offset+data.shape[1]>newdata.shape[1]:
+            x_max = newdata.shape[1]
+        else:
+            x_max = x_offset+data.shape[1]
+        if x_offset+data.shape[1]>data.shape[1]:
+            x_slice = -(x_offset+data.shape[1]-x_max)
+        else:
+            x_slice = data.shape[1]
+        if y_offset+data.shape[0]>y_max:
+            y_slice = -(y_offset+data.shape[0]-y_max)
+        else:
+            y_slice = data.shape[0]
+
+        #insert data to out dataset
+        newdata[ y_offset:y_max, x_offset:x_max] = data[ : y_slice, : x_slice]
+        #return data in the same dimensions like the inputed dst_extent raster
+        return newdata
+    else:
         print "ERROR: pixel-size dosent match / you need to resample one of the files; src: {0} != dst: {1}".format(src_extent.px_size, dst_extent.px_size)
-    
-    data = read_tif(data_path)
-
-    x_offset = (src_extent.left-dst_extent.left)*src_extent.px_size
-    #right_x_mismatch = src_extent[2]*src_extent[-1] -  (left_x_mismatch+dst_extent[2]*dst_extent[-1]) 
-    
-    y_offset = (dst_extent.top-src_extent.top)*src_extent.px_size
-    #bottom_mismatch = src_extent[1]*src_extent[3]*src_extent[-1]- (top_y_mismatch+dst_extent[2]*dst_extent[-1])
-    
-    
-    #create empyt out raster 
-    newdata = np.zeros((dst_extent.rows, dst_extent.columns))
-    
-    #assign nodata value
-    if nodata:
-        noData = nodata
-    else:
-        noData = np.nan
-    
-    #fill empty raster with noData value
-    newdata = np.where(newdata ==0 , noData, noData)
-    
-    #get the mx dimensions of the raster and borders to slice
-    if x_offset < 0:
-        data = data[:,abs(x_offset):abs(x_offset)+newdata.shape[1]]
-        x_offset = 0
-    if y_offset < 0:
-        data = data[abs(y_offset):abs(y_offset)+newdata.shape[0],:]
-        y_offset = 0
-    if y_offset+data.shape[0]>newdata.shape[0]:
-        y_max = newdata.shape[0]
-    else:
-        y_max = y_offset+data.shape[0]
-    if x_offset+data.shape[1]>newdata.shape[1]:
-        x_max = newdata.shape[1]
-    else:
-        x_max = x_offset+data.shape[1]   
-    if x_offset+data.shape[1]>data.shape[1]:
-        x_slice = -(x_offset+data.shape[1]-x_max)
-    else:
-        x_slice = data.shape[1]
-    if y_offset+data.shape[0]>y_max:
-        y_slice = -(y_offset+data.shape[0]-y_max)
-    else:
-        y_slice = data.shape[0]
-
-    #insert data to out dataset
-    newdata[ y_offset:y_max, x_offset:x_max] = data[ : y_slice, : x_slice]
-    return newdata
-    
+        return None
