@@ -280,6 +280,8 @@ class extent():
 
     #retun list with extent infos
     def ret_extent(self):
+        if hasattr(self, 'right') and hasattr(self, 'bottom'):
+            return (self.left, self.top, self.right, self.bottom, self.columns, self.rows, self.px_size, self.py_size)
         return (self.left, self.top, self.columns, self.rows, self.px_size, self.py_size)
 
     #calc missing corners
