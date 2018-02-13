@@ -180,6 +180,14 @@ def set_nodata(tif,band,nodata):
     band.SetNoDataValue(nodata)
     band=None
     inTif = None
+    
+
+def mptype(obj):
+    #returns my object type
+    try:
+        return str(obj.__class__).split('.')[1]
+    except:
+        return str(type(obj)).split(" '")[1].split("'")[0]
 
 def read_tif_info(tif):
     # to get the infos from the raster \
@@ -363,3 +371,159 @@ def raster2extent(data_path, dst_extent, nodata = False):
     else:
         print "ERROR: pixel-size dosent match / you need to resample one of the files; src: {0} != dst: {1}".format(src_extent.px_size, dst_extent.px_size)
         return None
+
+
+class geoobj():
+    '''  
+         __________________________________________________
+         ###            MacPyver.raster.tiff            ###
+         ###   The Swissknife like Python-Package for   ###
+         ###        work in general and with GIS        ###
+         __________________________________________________
+
+
+    geoobj is a "geo-tif" with all geoinformations and the data
+    by generating the object it will read the infos,
+    functions can read and write the data
+
+    to inizialice the object do:
+
+    go = geoobj(fullpath2tif) --> metadata is read
+    
+    
+    functions:
+        
+        read_data   --> read in the raster vaules as an numpy array
+        create_data2 --> create a second data frame in the object
+        update_data --> update the red data
+        write_tif   --> write data to file 
+    '''
+
+    def __init__(self, inpath):
+        try:
+            "create go with all values"
+            self.intif   = zz_gdalnum.gdal.Open(inpath, zz_gdalcon.GA_ReadOnly)
+            self.driver  = zz_gdalnum.gdal.GetDriverByName('GTiff')
+            self.columns = self.intif.RasterXSize
+            self.rows    = self.intif.RasterYSize
+            geotransform = self.intif.GetGeoTransform()
+            self.px_size = geotransform[1]
+            self.py_size = geotransform[5]
+            self.xmin = geotransform[0]
+            self.ymax = geotransform[3]
+            self.xmax = self.xmin + self.columns * self.px_size
+            self.ymin = self.ymax + abs(self.rows * self.py_size)
+            self.extent = [self.xmin, self.ymin, self.xmax, self.ymax, self.px_size, self.py_size]
+            #get nodata value from raster
+            nodata = self.intif.GetRasterBand(1).GetNoDataValue()
+            if nodata:
+                self.nodata = nodata
+            else:
+                self.nodata = None
+        except:
+            #print 'ERROR: file is not a valid raster'
+            raise NameError('ERROR: file is not a valid raster')
+
+
+    def read_data(self, band_nr = 1):
+        ''' creates the method data where the matrix of the raster is stored'''
+        band = self.intif.GetRasterBand(band_nr)
+        self.data = zz_gdalnum.BandReadAsArray(band)
+        
+        
+    def write_tif(self, outname, data2write= False, dtype = 1, nodata = False, option = 'COMPRESS=DEFLATE'):
+        '''dtype: ....
+        
+            if nodata set to True the orig nodata value will be assigned to the raster,
+            if it is not a double ( in this case no nodata will be assigned)
+            
+            write_tif(outname, data2write=False, dtype=1, nodata=False, option='Compress=Deflate')
+            
+            dtypes:
+                0 --> Int16
+                1 --> Int32
+                2 --> UIit16
+                3 --> UInt32
+                4 --> Float32
+                5 --> Float64
+                6 --> UInt8
+                
+        '''
+        dtypeL = [zz_gdalcon.GDT_Int16, zz_gdalcon.GDT_Int32,
+                  zz_gdalcon.GDT_UInt16, zz_gdalcon.GDT_UInt32,
+                  zz_gdalcon.GDT_Float32, zz_gdalcon.GDT_Float64,
+                  zz_gdalcon.GDT_Byte]
+        try:
+            if not data2write:
+                data2write = self.data
+                
+                  
+            if len(data2write.shape)==3:
+                nr_of_bands = data2write.shape[0]
+            elif len(data2write.shape)==2:
+                nr_of_bands = 1
+            else:
+                raise NameError('ERROR: in Number of Bands')
+
+            if np.result_type(data2write)!= 'int':
+                dataOut = self.driver.Create(outname, self.columns, self.rows, nr_of_bands, dtypeL[dtype])
+            else:
+                dataOut = self.driver.Create(outname, self.columns, self.rows, nr_of_bands, dtypeL[dtype], options=[option])
+
+            dataOut.SetGeoTransform(self.intif.GetGeoTransform())
+            #zz_gdalnum.CopyDatasetInfo(self.intif, dataOut)
+
+            for band in range(nr_of_bands):
+                bandOut = dataOut.GetRasterBand(band+1)
+                
+                if nodata:
+                    #test if nodate can be set
+                    if isinstance(nodata, bool) and 'e' not in str(self.nodata):
+                        nodata = self.nodata
+                    if 'e' in str(nodata):
+                        nodata = False
+                    if nodata:
+                        bandOut.SetNoDataValue(nodata)
+                        
+                if nr_of_bands==1:
+                    zz_gdalnum.BandWriteArray(bandOut,data2write)
+                else:
+                    zz_gdalnum.BandWriteArray(bandOut,data2write[band,:,:])
+                bandOut = None
+            dataOut = None
+            print 0
+        except IOError as e:
+            print "I/O error({0}): {1}".format(e.errno, e.strerror)
+        except ValueError:
+            print ("Could not write the nodata value")
+        except:
+            print "Unexpected error:", sys.exc_info()
+        
+
+    def updata_data(self, newdata):
+        '''
+        updata the orig data with new data
+        is checking if the shape of the data stays the same 
+        
+        is equal to go.data = newdata
+        
+        go.update_data(newdata)
+        newdata is stored in go.data
+        '''
+        if self.data.shape == newdata.shape:            
+            self.data = newdata
+        else:
+            print "ERROR: abord updating: updated Data has a differnet shape"
+            print "       original shape: {0}".format(self.data.shape)
+            print "       updated shape:  {0}".format(newdata.shape)
+        
+    def create_data2(self, indata):
+        '''creates a second data frame
+        but no change in the metadata'''
+        
+        self.data2 = indata
+        if self.data2.shape != self.data.shape:
+            print "WARNING: data2 has a different shape then data"
+            print "data: {0} != data2: {1}".format(self.data.shape, self.data2.shape)
+        
+
