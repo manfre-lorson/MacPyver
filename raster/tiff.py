@@ -151,6 +151,8 @@ def Help(inhal = ''):
 ###############################################################################
 
 def read_tif(tif,band=1,nodata=0):
+    '''read tif into numpy array'''
+    
     try:
         #default band is 1 and default for return nodata value is False ~ 0 ;1 ~ True
         inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_ReadOnly)
@@ -174,6 +176,8 @@ def read_tif(tif,band=1,nodata=0):
         raise
 
 def set_nodata(tif,band,nodata):
+    ''' set nodata value to the existing raster'''
+    
     #update a raster --> burn nodata value to raster
     inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_Update)
     band = inTif.GetRasterBand(band)
@@ -183,15 +187,16 @@ def set_nodata(tif,band,nodata):
     
 
 def mptype(obj):
-    #returns my object type
+    '''returns my object type'''
     try:
         return str(obj.__class__).split('.')[1]
     except:
         return str(type(obj)).split(" '")[1].split("'")[0]
 
 def read_tif_info(tif):
-    # to get the infos from the raster \
-    # returns the raster object, the driver, nr of cloumns and rows
+    ''' to get the infos from the raster \
+    returns the raster object, the driver, nr of cloumns and rows'''
+    
     inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_ReadOnly)
     driver = zz_gdalnum.gdal.GetDriverByName('GTiff')
     inCols = inTif.RasterXSize
@@ -199,14 +204,7 @@ def read_tif_info(tif):
     return inTif, driver, inCols, inRows
 
 
-def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, option=False ):
-    dtypeL = [zz_gdalcon.GDT_Int16,
-              zz_gdalcon.GDT_Int32,
-              zz_gdalcon.GDT_UInt16,
-              zz_gdalcon.GDT_UInt32,
-              zz_gdalcon.GDT_Float32,
-              zz_gdalcon.GDT_Float64,
-              zz_gdalcon.GDT_Byte]
+def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, option=False ): 
     '''writes data to a tiff and writes the srid infos ot it
         file_with_srid --> original file which has geoinformation
         full_output_name --> path + filename + .tiff
@@ -228,7 +226,14 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, opt
         if the passed data has more the onw band all bands will be written to the output
 
     '''
-
+    
+    dtypeL = [zz_gdalcon.GDT_Int16,
+                  zz_gdalcon.GDT_Int32,
+                  zz_gdalcon.GDT_UInt16,
+                  zz_gdalcon.GDT_UInt32,
+                  zz_gdalcon.GDT_Float32,
+                  zz_gdalcon.GDT_Float64,
+                  zz_gdalcon.GDT_Byte]
     try:
         inTiff, driver, inCols, inRows = read_tif_info(file_with_srid)
         if len(data.shape)==3:
@@ -267,6 +272,9 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, opt
 #create class to store the extent
 #is used by the function get_extent
 class extent():
+    '''create class to store the extent
+    is used by the function get_exten'''
+    
     def __init__(self, coordinates = False, quite = False):
         if coordinates:
             if len(coordinates)==6:
@@ -288,18 +296,23 @@ class extent():
 
     #retun list with extent infos
     def ret_extent(self):
+        ''' returns the extent as a list'''
+        
         if hasattr(self, 'right') and hasattr(self, 'bottom'):
             return (self.left, self.top, self.right, self.bottom, self.columns, self.rows, self.px_size, self.py_size)
         return (self.left, self.top, self.columns, self.rows, self.px_size, self.py_size)
 
     #calc missing corners
     def calc_corners(self):
+        '''calc the missing extent corners'''
+        
         self.right = self.left + self.columns * self.px_size
         self.bottom = self.top - abs(self.rows * self.py_size)
         print 'right: {0} and bottom: {1} are stored in the object'.format(self.right, self.bottom)
 
 #returns an object with the extent of the passed image path
 def get_extent(data_path):
+    '''get the coordinates of the extent'''
     #path to be read in
     intif, driver, columns, rows = read_tif_info(data_path)
     #get info from raster
@@ -314,10 +327,12 @@ def get_extent(data_path):
         return data_extent
 
 
-#generates a raster with the same extent like the passed dst_extent raster
-#to be able to calc with both in a numpy array
-#the input-rasters need to have the same resolution (pixelsize) - (but its checking for that)
+
 def raster2extent(data_path, dst_extent, nodata = False):
+    '''generates a raster with the same extent like the passed dst_extent raster
+    to be able to calc with both in a numpy array
+    the input-rasters need to have the same resolution (pixelsize) - (but its checking for that)'''
+    
     #get extentdata from source / data_path or from extent class
     src_extent = get_extent(data_path)
     dst_extent = get_extent(dst_extent)
