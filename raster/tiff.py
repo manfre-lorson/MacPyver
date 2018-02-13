@@ -531,6 +531,7 @@ class geoobj():
             print "ERROR: abord updating: updated Data has a differnet shape"
             print "       original shape: {0}".format(self.data.shape)
             print "       updated shape:  {0}".format(newdata.shape)
+            
         
     def create_data2(self, indata):
         '''creates a second data frame
@@ -540,5 +541,21 @@ class geoobj():
         if self.data2.shape != self.data.shape:
             print "WARNING: data2 has a different shape then data"
             print "data: {0} != data2: {1}".format(self.data.shape, self.data2.shape)
-        
+            
+    
+    def extrem_values(self, band_nr = 1):
+        '''gets the extrem values of a raster
+            will read the data if it is not done befor
+            is list of 2 lowest and  2 highest values in the tif'''
+            
+        if not hasattr(self, 'data'):
+            self.read_data(band_nr)
+        unique = np.unique(self.data)
+        if self.nodata:
+            unique = np.delete(unique, self.nodata)
+            self.min_max_value = [unique[0], unique[-1]]
+        elif len(unique)<4:
+            self.min_max_value = unique
+        else:
+            self.min_max_value = [unique[0], unique[1], '...', unique[-2], unique[-1]]
 
