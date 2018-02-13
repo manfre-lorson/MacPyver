@@ -33,14 +33,14 @@ def read_tif(tif,band=1,nodata=0):
         bandNr   --> the number of the band you want to read
 
         if band is set to a certain value it will read just this band;
-    default is to read the first band; to read in all bands set band to zero; 
+    default is to read the first band; to read in all bands set band to zero;
     band can also be a list e.g.: [1,4,5] will be readin in the same order as passed
     (if band is a list start counting by 1);
     creates a 2d or 3d stack;
 
-    shape is (rows, columns for 2d) (band, rows, columns for 3d) 
-
+    shape is (rows, columns for 2d) (band, rows, columns for 3d)
     '''
+
     def read_data(inTif, band_nr, nodata=0):
         band = inTif.GetRasterBand(band_nr)
         data = zz_gdalnum.BandReadAsArray(band)
@@ -109,6 +109,7 @@ def set_nodata(tif,band,nodata):
         if nodata is set to None it will remove the nodata value
 
     '''
+
     #update a raster --> burn nodata value to raster
     inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_Update)
     band = inTif.GetRasterBand(band)
@@ -118,10 +119,9 @@ def set_nodata(tif,band,nodata):
         band.SetNoDataValue(nodata)
     band=None
     inTif = None
-    
 
 def mptype(obj):
-    #returns my object type
+    '''returns my object type'''
     try:
         return str(obj.__class__).split('.')[1]
     except:
@@ -137,18 +137,18 @@ def read_tif_info(tif):
 
     reads the infos ot the tif
     returns the filepointer, driver, nr of columns and rows
-    used by write tif function, 
+    used by write tif function,
     but can be used stand alone
     '''
 
     # to get the infos from the raster \
     # returns the raster object, the driver, nr of cloumns and rows
+
     inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_ReadOnly)
     driver = zz_gdalnum.gdal.GetDriverByName('GTiff')
     inCols = inTif.RasterXSize
     inRows = inTif.RasterYSize
     return inTif, driver, inCols, inRows
-
 
 def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=None, option=False ):
     '''
@@ -179,6 +179,7 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=None, opti
 
         if data is a 3d array it will write all bands to the tif (in single bands)
     '''
+
     dtypeL = [zz_gdalcon.GDT_Int16,
               zz_gdalcon.GDT_Int32,
               zz_gdalcon.GDT_UInt16,
@@ -186,6 +187,7 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=None, opti
               zz_gdalcon.GDT_Float32,
               zz_gdalcon.GDT_Float64,
               zz_gdalcon.GDT_Byte]
+
     try:
         inTiff, driver, inCols, inRows = read_tif_info(file_with_srid)
         if len(data.shape)==3:
@@ -258,6 +260,9 @@ def add_band(src_file, src_add, option="COMPRESS=DEFLATE"):
 #create class to store the extent
 #is used by the function get_extent
 class extent():
+    '''create class to store the extent
+    is used by the function get_exten'''
+    
     def __init__(self, coordinates = False, quite = False):
         if coordinates:
             if len(coordinates)==6:
@@ -279,12 +284,16 @@ class extent():
 
     #retun list with extent infos
     def ret_extent(self):
+        ''' returns the extent as a list'''
+        
         if hasattr(self, 'right') and hasattr(self, 'bottom'):
             return (self.left, self.top, self.right, self.bottom, self.columns, self.rows, self.px_size, self.py_size)
         return (self.left, self.top, self.columns, self.rows, self.px_size, self.py_size)
 
     #calc missing corners
     def calc_corners(self):
+        '''calc the missing extent corners'''
+        
         self.right = self.left + self.columns * self.px_size
         self.bottom = self.top - abs(self.rows * self.py_size)
         print 'right: {0} and bottom: {1} are stored in the object'.format(self.right, self.bottom)
@@ -330,6 +339,7 @@ def raster2extent(data_path, dst_extent, nodata = False, return_orig_x0_y0_value
                                     default is np.nan (to check for np.nan you hav to use
                                     np.isnan(...)
     '''
+
     #get extentdata from source / data_path or from extent class
     src_extent = get_extent(data_path)
     dst_extent = get_extent(dst_extent)
