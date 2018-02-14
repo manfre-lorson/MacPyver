@@ -15,6 +15,7 @@ Created on Thu Feb 25 15:12:36 2016
 
 import sys
 import numpy as np
+import os
 
 from osgeo import gdal
 import osgeo.gdalnumeric as zz_gdalnum
@@ -451,6 +452,8 @@ class geoobj():
             self.xmax = self.xmin + self.columns * self.px_size
             self.ymin = self.ymax + abs(self.rows * self.py_size)
             self.extent = [self.xmin, self.ymin, self.xmax, self.ymax, self.px_size, self.py_size]
+            self.name = inpath.split(os.sep)[-1]
+            self.path = (os.sep).join(inpath.split(os.sep)[:-1])
             #get nodata value from raster
             nodata = self.intif.GetRasterBand(1).GetNoDataValue()
             if nodata:
