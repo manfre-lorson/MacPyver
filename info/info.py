@@ -165,3 +165,26 @@ def glob_rec(path,wildcard='*'):
         for filename in fnmatch.filter(filenames, wildcard):
             matches.append(os.path.join(root, filename))
     return matches
+    
+    
+def pathdepth(inpath, depth, exists = True):
+    '''returns the path to the specific depths
+       
+       depth is same like foo[:depth] can work with minus values
+       
+       if exists is set to True the function will check if the file 
+       exists in the filesystem'''
+       
+    if exists:
+        if os.path.exists(inpath):
+            if os.path.isfile(inpath):
+                inpath = inpath[:inpath.rfind(os.sep)]
+            out = (os.sep).join(inpath.split(os.sep)[:depth])
+            return out
+        else:
+            print 'ERROR inserted file/path doesnt exists'
+            return None
+    else:
+        out = (os.sep).join(inpath.split(os.sep)[:depth])
+        return out
+
