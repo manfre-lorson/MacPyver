@@ -472,9 +472,8 @@ class geoobj():
                   zz_gdalcon.GDT_Float32, zz_gdalcon.GDT_Float64,
                   zz_gdalcon.GDT_Byte]
         try:
-            if not data2write:
-                data2write = self.data
-                
+            if type(data2write) != type(self.data):
+                data2write = self.data                
                   
             if len(data2write.shape)==3:
                 nr_of_bands = data2write.shape[0]
@@ -483,7 +482,7 @@ class geoobj():
             else:
                 raise NameError('ERROR: in Number of Bands')
 
-            if np.result_type(data2write)!= 'int':
+            if not 'int' in str(np.result_type(data2write)):
                 dataOut = self.driver.Create(outname, self.columns, self.rows, nr_of_bands, dtypeL[dtype])
             else:
                 dataOut = self.driver.Create(outname, self.columns, self.rows, nr_of_bands, dtypeL[dtype], options=[option])
