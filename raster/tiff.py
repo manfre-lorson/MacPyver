@@ -509,8 +509,8 @@ class geoobj():
             else:
                 dataOut = self.driver.Create(outname, self.columns, self.rows, nr_of_bands, dtypeL[dtype], options=[option])
 
-            dataOut.SetGeoTransform(self.intif.GetGeoTransform())
-            #zz_gdalnum.CopyDatasetInfo(self.intif, dataOut)
+            #dataOut.SetGeoTransform(self.intif.GetGeoTransform())
+            zz_gdalnum.CopyDatasetInfo(self.intif, dataOut)
 
             for band in range(nr_of_bands):
                 bandOut = dataOut.GetRasterBand(band+1)
