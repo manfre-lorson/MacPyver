@@ -238,7 +238,7 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, opt
         zz_gdalnum.CopyDatasetInfo(inTiff,dataOut)
         for band in range(nr_of_bands):
             bandOut = dataOut.GetRasterBand(band+1)
-            if nodata:
+            if nodata == 0 or nodata:
                 bandOut.SetNoDataValue(nodata)
             if nr_of_bands==1:
                 zz_gdalnum.BandWriteArray(bandOut,data)
@@ -305,13 +305,20 @@ def get_extent(data_path):
 #generates a raster with the same extent like the passed dst_extent raster
 #to be able to calc with both in a numpy array
 #the input-rasters need to have the same resolution (pixelsize) - (but its checking for that)
-def raster2extent(data_path, dst_extent, nodata = False):
+def raster2extent(data_path, dst_extent, nodata = False, return_orig_x0_y0_value = False):
     #get extentdata from source / data_path or from extent class
     src_extent = get_extent(data_path)
     dst_extent = get_extent(dst_extent)
-
-    if dst_extent.px_size == src_extent.px_size:
+    
+    if src_extent.ret_extent() == dst_extent.ret_extent():
         data = read_tif(data_path)
+        data = np.where(data==data[0,0], np.nan, data)
+        print "red data"
+        return data
+
+    elif dst_extent.px_size == src_extent.px_size:
+        data = read_tif(data_path)
+        orig_x0_y0 = data[0,0]
         #calc x offset (left)
         x_offset = (src_extent.left-dst_extent.left)*src_extent.px_size
         #calc y offset (top)
@@ -353,9 +360,17 @@ def raster2extent(data_path, dst_extent, nodata = False):
             y_slice = data.shape[0]
 
         #insert data to out dataset
+        if x_slice > dst_extent.columns:
+            x_slice = dst_extent.columns
         newdata[ y_offset:y_max, x_offset:x_max] = data[ : y_slice, : x_slice]
+        newdata = np.where(newdata==orig_x0_y0, np.nan, newdata)
+        
         #return data in the same dimensions like the inputed dst_extent raster
-        return newdata
+        print "slicesd data"
+        if return_orig_x0_y0_value:
+            return newdata, orig_x0_y0
+        else:
+            return newdata
     else:
         print "ERROR: pixel-size dosent match / you need to resample one of the files; src: {0} != dst: {1}".format(src_extent.px_size, dst_extent.px_size)
         return None
