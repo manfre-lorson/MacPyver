@@ -508,7 +508,7 @@ class geoobj():
                     zz_gdalnum.BandWriteArray(bandOut,data2write[band,:,:])
                 bandOut = None
             dataOut = None
-            print 0
+            #print 0
         except IOError as e:
             print "I/O error({0}): {1}".format(e.errno, e.strerror)
         except ValueError:
