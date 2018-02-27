@@ -19,11 +19,20 @@ class shp_attr_tbl():
 
     def __init__(self,shp_name):
         #dictionary to translate the geometry
-        _geometry_dic = {-2147483647:"Point25D", -2147483646:"LineString25D",
-            -2147483645:"Polygon25D", -2147483644:"MultiPoint25D",
-            -2147483643:"MultiLineString25D", -2147483642:"MultiPolygon25D",
-            0: "Geometry", 1: "Point", 2: "Line", 3:"Polygon", 4:"MultiPoint",
-            5: "MultiLineString", 6: "MultiPolygon", 100: "No Geometry"}
+        _geometry_dic = {-2147483647:"Point25D",
+                         -2147483646:"LineString25D",
+                         -2147483645:"Polygon25D", 
+                         -2147483644:"MultiPoint25D",
+                         -2147483643:"MultiLineString25D", 
+                         -2147483642:"MultiPolygon25D",
+                         0: "Geometry", 
+                         1: "Point", 
+                         2: "Line", 
+                         3:"Polygon", 
+                         4:"MultiPoint",
+                         5: "MultiLineString", 
+                         6: "MultiPolygon", 
+                         100: "No Geometry"}
           
         self.name =shp_name.split(os.sep)[-1]
         self.path = (os.sep).join(shp_name.split(os.sep)[:-1])
@@ -91,14 +100,16 @@ class shp_attr_tbl():
             print("ERROR: no data to write\nuse >>> .get_attr_tbl first")
             
     def stats(self, min_max=False):
+        '''prints several infos of the passed shp'''
+        
         _dtype_dic = {'int64':'int', 'object':'string', 'float64':'float'}
         if not hasattr(self, 'attributes'):
             self.get_attr_tbl()
         rows , cols = self.attributes.shape
         print'\n'
-        print self.path
-        print self.name
-        print 'shape: columns: {0}; rows: {1}\n'.format(cols, rows)
+        print 'directory:',self.path
+        print 'filename:',self.name
+        print '\nshape: columns: {0}; rows: {1}\n'.format(cols, rows)
         print self.spatialref
         print "\nGeometryType: {0}".format(self.geometrytype)
         
@@ -124,7 +135,7 @@ class shp_attr_tbl():
         for x in self.fieldnames:
             if min_max:
                 if _dtype_dic[str(self.attributes[x].dtype)] == 'float':
-                    minmax = "| not created beacuse is float"
+                    minmax = "| not created because its float"
                 else: 
                     unique = list(set(self.attributes[x]))
                     unique.sort()
@@ -139,6 +150,8 @@ class shp_attr_tbl():
 
     
     def uniqueValue(self, ColumnName):
+        '''returns the unique values of the specified column'''
+        
         if ColumnName not in self.fieldnames:
             print 'ERROR: ColumnName does not exists in  fieldnames'
             print 'Check existing names with *.fieldnames'
@@ -150,33 +163,53 @@ class shp_attr_tbl():
 
         
 if __name__=='__main__':
-        import argparse
-        parser = argparse.ArgumentParser(description='prints the information of the passed shp file')
-        parser.add_argument('infile',
-                    help='put in the full path input file, with filename (shapefile)',
-                    type=str#argparse.FileType('r')
-                    )
-        parser.add_argument('-w','--wait', 
-                            help='you are willing to wait until all entries are sorted and you get the min and max value per column',
-                            default=False, action='store_true')
+    '''can be used as stand alone commandline tool\n
+    all the script with a shapefile'''
+    
+    import argparse
+    parser = argparse.ArgumentParser(description='    prints the information of the passed shp file\n\
+    is part of the python site-package MacPyver\n\
+    https://github.com/manfre-lorson/MacPyver\n', formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('infile',
+                help='put in the full path input file, with filename (shapefile)\nextension dosent matter (can be dbf/prj/shp/shx/...)',
+                type=str#argparse.FileType('r')
+                )
+    parser.add_argument('-w','--wait', 
+                        help='you are willing to wait until all entries are sorted \nand you get the min and max value per column',
+                        default=False, action='store_true')
 
-        parse = parser.parse_args()
-
-        infile = parse.infile
-        wait = parse.wait
+    parse = parser.parse_args()
+    #assign variables
+    infile = parse.infile
+    wait = parse.wait
+    
+    #check if file exists
+    if not infile.endswith('.shp'):
+        infile = infile[:infile.rfind('.')]+'.shp'
+    if not os.path.exists(infile):
+        print '\nERROR: file {0} dosent exists in the filesystem'.format(infile)
+    else:
+        shp = shp_attr_tbl(infile)
         
-        if not infile.endswith('.shp'):
-            infile = infile[:infile.rfind('.')]+'.shp'
-        if not os.path.exists(infile):
-            print '\nERROR: file {0} dosent exists in the filesystem'.format(infile)
+        if wait:
+            shp.stats(1)
+        elif shp.featurecount > 10000:
+            shp.stats()
+            print "\nWARNING: didnt do the min-max values because of to many entries"
+            print "If you are willing to wait use the -w flag"
         else:
-            shp = shp_attr_tbl(infile)
-            
-            if wait:
-                shp.stats(1)
-            elif shp.featurecount > 10000:
-                shp.stats()
-                print "\nWARNING: didnt do the min-max values because of to many entries"
-                print "If you are willing to wait use the -w flag"
-            else:
-                shp.stats(1)
+            shp.stats(1)
+
+''' 
+for windows users: for an easy use of the commandline, do:
+create a ogrinfo2.bat file in a directory which is in your windows path variable (if you are able to use the gdal commands from the cmd
+just put the created .bat in the same directory)
+
+inside the .bat you need to have the following (you need to adjust your paths)
+
+@echo off
+set args1=%1
+set args2=%2
+C:\Anaconda2\python.exe C:\Anaconda2\lib\site-packages\MacPyver\vector\__init__.py %args1% %args2%
+
+save this and then you can run it directly from your cmd '''
