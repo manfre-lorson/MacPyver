@@ -37,7 +37,7 @@ import info
 import raster
 import postgres
 import git
-
+import vector
 
 
 
