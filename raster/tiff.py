@@ -261,30 +261,33 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, opt
 class extent():
     def __init__(self, coordinates = False, quite = False):
         if coordinates:
-            if len(coordinates)==5:
+            if len(coordinates)==6:
                 for x in coordinates:
                     if isinstance(x, (float, int)) == False:
-                        print "Error in given coordinates, at least one given value is not a number" 
+                        print "Error in given coordinates, at least one given value is not a number"
                         print "all values set to zero"
-                        coordinates = [0,0,0,0,0]
-                self.left, self.top, self.columns, self.rows, self.px_size = coordinates
+                        coordinates = [0,0,0,0,0,0]
+                self.left, self.top, self.columns, self.rows, self.px_size, self.py_size = coordinates
         else:
             self.left=0
             self.top=0
             self.columns=0
             self.rows = 0
             self.px_size = 0
+            self.py_size = 0
             if quite == False:
                 print "WARNING: all extent values are set to zero"
 
     #retun list with extent infos
     def ret_extent(self):
-        return (self.left, self.top, self.columns, self.rows, self.px_size)
+        if hasattr(self, 'right') and hasattr(self, 'bottom'):
+            return (self.left, self.top, self.right, self.bottom, self.columns, self.rows, self.px_size, self.py_size)
+        return (self.left, self.top, self.columns, self.rows, self.px_size, self.py_size)
 
     #calc missing corners
     def calc_corners(self):
         self.right = self.left + self.columns * self.px_size
-        self.bottom = self.top + self.rows * self.px_size
+        self.bottom = self.top - abs(self.rows * self.py_size)
         print 'right: {0} and bottom: {1} are stored in the object'.format(self.right, self.bottom)
 
 #returns an object with the extent of the passed image path
@@ -295,10 +298,11 @@ def get_extent(data_path):
     left, px_x_size, tilt_x, top, tilt_y, px_y_size = intif.GetGeoTransform()
     intif, driver = [None]*2
     if abs(px_x_size) != abs(px_y_size):
-        print 'ERROR: x-pixel-size is not equal to y-pixel-size'
-        return False
+        print 'WARNING: x-pixel-size is not equal to y-pixel-size'
+        data_extent = extent((left, top, columns, rows, px_x_size, px_y_size))
+        return data_extent
     else:
-        data_extent = extent((left, top, columns, rows, px_x_size))
+        data_extent = extent((left, top, columns, rows, px_x_size, px_y_size))
         return data_extent
 
 
