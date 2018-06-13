@@ -151,21 +151,45 @@ def Help(inhal = ''):
 ###############################################################################
 
 def read_tif(tif,band=1,nodata=0):
+    """ reads in a tif, and returns a numpy array
+    	if band is set to a certain value it will read just this band
+	default is to read the first band; to read in all bands set band to zero; 
+	creates a 2d or 3d stack 
+	shape is (rows, columns for 2d) (band, rows, columns for 3d) 
+    """
+    def read_data(inTif, band_nr, nodata=0):
+        band = inTif.GetRasterBand(band_nr)
+        data = zz_gdalnum.BandReadAsArray(band)
+        inTif = None
+        if type(data)==None.__class__:
+	    raise
+        else:
+	    if nodata==0:
+	        return data
+	    elif nodata==1:
+	        noda = band.GetNoDataValue()
+	        return data, noda
+
     try:
         #default band is 1 and default for return nodata value is False ~ 0 ;1 ~ True
         inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_ReadOnly)
+	if band == 0:
+	    #get number of available bands
+	    nr_of_bands = inTif.RasterCount
+	else:
+	    nr_of_bands = 1
+	#read in band(s)
         if type(inTif)!='NoneType':
-            band = inTif.GetRasterBand(band)
-            data = zz_gdalnum.BandReadAsArray(band)
-            inTif = None
-            if type(data)==None.__class__:
-                raise
-            else:
-                if nodata==0:
-                    return data
-                elif nodata==1:
-                    noda = band.GetNoDataValue()
-                    return data, noda
+	    if nr_of_bands == 1:
+		return read_data(inTif, band, nodata)
+	    elif nr_of_bands > 1:
+	        for b in range(1, nr_of_bands+1):
+		    if b == 1 :
+		        stack = read_data(inTif, b)
+			stack = stack.reshape(1, stack.shape[0], stack.shape[1])
+		    else:
+		    	stack = np.vstack((stack, read_data(inTif, b).reshape((1, stack.shape[1], stack.shape[2]))))
+		return stack
         else:
             raise NameError('input is not a file or file is broken')
     except:
