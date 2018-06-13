@@ -151,11 +151,16 @@ def Help(inhal = ''):
 ###############################################################################
 
 def read_tif(tif,band=1,nodata=0):
-    """ reads in a tif, and returns a numpy array
-    	if band is set to a certain value it will read just this band
+    """ 
+    	reads in a tif, and returns a numpy array;
+    	if band is set to a certain value it will read just this band;
 	default is to read the first band; to read in all bands set band to zero; 
-	creates a 2d or 3d stack 
+	band can also be a list e.g.: [1,4,5] will be readin in the same order as passed
+	(if band is a list start counting by 1);
+	creates a 2d or 3d stack;
+	
 	shape is (rows, columns for 2d) (band, rows, columns for 3d) 
+
     """
     def read_data(inTif, band_nr, nodata=0):
         band = inTif.GetRasterBand(band_nr)
@@ -174,22 +179,32 @@ def read_tif(tif,band=1,nodata=0):
         #default band is 1 and default for return nodata value is False ~ 0 ;1 ~ True
         inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_ReadOnly)
 	if band == 0:
-	    #get number of available bands
-	    nr_of_bands = inTif.RasterCount
-	else:
+	    #get number of available bands and create list from it with range
+	    nr_of_bands = range(1,inTif.RasterCount+1)
+	elif type(band)== int:
 	    nr_of_bands = 1
+	elif type(band)==list:
+	    nr_of_bands = band
+	    #test if max passed value is in the range of possible bands
+	    if np.array(nr_of_bands).max() > inTif.RasterCount:
+	        raise ValueError('max Value in the list is higher then the max possible nr of Bands in the raster\n --> max Value is: {0}'.format(inTif.RasterCount)) 
+
 	#read in band(s)
         if type(inTif)!='NoneType':
 	    if nr_of_bands == 1:
 		return read_data(inTif, band, nodata)
-	    elif nr_of_bands > 1:
-	        for b in range(1, nr_of_bands+1):
+	    elif type(nr_of_bands) == list and len(nr_of_bands) > 1:
+	        for b in nr_of_bands:
+		    #initialize and create the stack
 		    if b == 1 :
 		        stack = read_data(inTif, b)
 			stack = stack.reshape(1, stack.shape[0], stack.shape[1])
 		    else:
+		    	#read in all other bands
 		    	stack = np.vstack((stack, read_data(inTif, b).reshape((1, stack.shape[1], stack.shape[2]))))
 		return stack
+	    elif type(nr_of_bands) == list and len(nr_of_bands) <=1:
+	        raise ValueError('error in passed band option\nband is not a list longer then 1\nto read in one band use: band = 1 (or any other possible band nr)')
         else:
             raise NameError('input is not a file or file is broken')
     except:
