@@ -13,58 +13,12 @@ import osgeo.gdalconst as zz_gdalcon
 
 
 
-'''
-def Help(inhal = ''):
-    HelpInhalt =  sorted(['set_nodata','read_tif', 'read_tif_info', 'write_tif'])
-    if inhal =='':
-        inhal = HelpInhalt
-    inhalt = inhal
-    if type(inhalt)== str:
-        cList = []
-        cList.append(inhalt)
-        cList.append("nix")
-        inhalt = cList
 
-    myDic = {"header": """
-            __________________________________________________
+'	    __________________________________________________'
 	    ###            MacPyver.raster.tiff            ###
             ###   The Swissknife like Python-Package for   ###
             ###        work in general and with GIS        ###
-            __________________________________________________
-
-                How to use the functions:
-
-             """,
-
-
-
-
-
-               }
-
-    print myDic["header"]
-    counter = 0
-    inhalt.sort()
-    op = []
-    for ele in inhalt:
-        for el in myDic.keys():
-            if ele.lower() in el.lower():
-                op.append(el)
-                #print myDic[el]
-                counter += 1
-
-    if counter >0:
-        op = sorted(list(set(op)))
-        for ele in op:
-            print myDic[ele]
-    elif counter == 0:
-        print ">>> Couldnt find what you are looking for<<<"
-        print ""
-        for ele in HelpInhalt:
-            print myDic[ele]
-'''
-###############################################################################
-###############################################################################
+'           __________________________________________________'
 
 
 
