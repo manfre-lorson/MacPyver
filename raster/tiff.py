@@ -29,7 +29,7 @@ import osgeo.gdalconst as zz_gdalcon
 def read_tif(tif,band=1,nodata=0):
     ''' 
     	reads in a tif, and returns a numpy array;
-            "read_tif":"""read_tif:
+		
                 to read a tif into python
 
                 >>> data = read_tif(fullPath, bandNr)
@@ -37,7 +37,6 @@ def read_tif(tif,band=1,nodata=0):
                 fullPath --> full path plus the filename
                 bandNr   --> the number of the band you want to read
 
-            """,
     	if band is set to a certain value it will read just this band;
 	default is to read the first band; to read in all bands set band to zero; 
 	band can also be a list e.g.: [1,4,5] will be readin in the same order as passed
@@ -46,7 +45,6 @@ def read_tif(tif,band=1,nodata=0):
 	
 	shape is (rows, columns for 2d) (band, rows, columns for 3d) 
 
-    """
     '''
     def read_data(inTif, band_nr, nodata=0):
         band = inTif.GetRasterBand(band_nr)
@@ -102,7 +100,7 @@ def set_nodata(tif,band,nodata):
     '''
     updates a tif and assigns the nodata value
             
-	    "set_nodata":"""set_nodata(fullPath,band,nodata)
+	    set_nodata(fullPath,band,nodata)
 
                 >>> set_nodata(fullPath,1,-9999)
 
@@ -110,7 +108,6 @@ def set_nodata(tif,band,nodata):
                 band     --> band to work with
                 nodata   --> nodata value
 
-            """,
     '''
     #update a raster --> burn nodata value to raster
     inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_Update)
@@ -121,14 +118,12 @@ def set_nodata(tif,band,nodata):
 
 def read_tif_info(tif):
     '''
-            "read_tif_info":"""read_tif_info:
                 read infos from tif
 
                 >>> inTif, driver, inCols, inRows = read_tif_info(fullpath)
 
                 fullPath --> full path plus the filename
 
-            """
     reads the infos ot the tif
     returns the filepointer, driver, nr of columns and rows
     used by write tif function, 
@@ -146,7 +141,6 @@ def read_tif_info(tif):
 
 def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, option=False ):
     '''
-            "write_tif":"""write_tif:
                 write data to tif
 
                 >>> write_tif(file_with_srid, full_output_name, data, 1, nodata=False, option=False)
@@ -171,7 +165,8 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, opt
                                        if you put a Value --> this Value will be the NoData Value
                 option           --> "COMPRESS=DEFLATE"
 
-            """
+    		
+		if data is a 3d array it will write all bands to the tif (in single bands)
     '''
     dtypeL = [zz_gdalcon.GDT_Int16,
               zz_gdalcon.GDT_Int32,
@@ -252,7 +247,6 @@ class extent():
 #returns an object with the extent of the passed image path
 def get_extent(data_path):
     '''
-	    "get_extent":"""get_extent:
                 creates an object with the extent infomation of the passed raster
 
                 >>> ext = get_extent(file_path)
@@ -260,7 +254,6 @@ def get_extent(data_path):
                 file_path       --> full path to the file
                 inside are the following parametes:
                     left, top, columns, rows, px_size
-            """,
     '''
 
     #path to be read in
@@ -282,7 +275,6 @@ def get_extent(data_path):
 #the input-rasters need to have the same resolution (pixelsize) - (but its checking for that)
 def raster2extent(data_path, dst_extent, nodata = False):
     '''
-	    "raser2extent":"""raster2extent:
                 slice raster to the same extent
 
                 >>> data = raster2extent(data_path, dst_extent, nodata = False)
@@ -292,7 +284,6 @@ def raster2extent(data_path, dst_extent, nodata = False):
                 nodata          --> can be specified to set nodata value in the sliced output
                                     default is np.nan (to check for np.nan you hav to use
                                     np.isnan(...)
-            """
     '''
     #get extentdata from source / data_path or from extent class
     src_extent = get_extent(data_path)
