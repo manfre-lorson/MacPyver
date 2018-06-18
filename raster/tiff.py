@@ -14,39 +14,22 @@ import osgeo.gdalconst as zz_gdalcon
 
 
 
-def Help(inhal = ''):
-    HelpInhalt =  sorted(['set_nodata','read_tif', 'read_tif_info', 'write_tif'])
-    if inhal =='':
-        inhal = HelpInhalt
-    inhalt = inhal
-    if type(inhalt)== str:
-        cList = []
-        cList.append(inhalt)
-        cList.append("nix")
-        inhalt = cList
-
-    myDic = {"header": """
-            __________________________________________________
+'	    __________________________________________________'
 	    ###            MacPyver.raster.tiff            ###
             ###   The Swissknife like Python-Package for   ###
             ###        work in general and with GIS        ###
-            __________________________________________________
+'           __________________________________________________'
 
-                How to use the functions:
 
-             """,
-            "set_nodata":"""set_nodata(fullPath,band,nodata)
 
-                >>> set_nodata(fullPath,1,-9999)
+###############################################################################
+####                            Functions                                  ####
+###############################################################################
 
-                fullPath --> full path plus the filename
-                band     --> band to work with
-                nodata   --> nodata value
-
-    ______________________________________________________________________
-            """,
-
-            "read_tif":"""read_tif:
+def read_tif(tif,band=1,nodata=0):
+    ''' 
+    	reads in a tif, and returns a numpy array;
+		
                 to read a tif into python
 
                 >>> data = read_tif(fullPath, bandNr)
@@ -54,20 +37,110 @@ def Help(inhal = ''):
                 fullPath --> full path plus the filename
                 bandNr   --> the number of the band you want to read
 
-                ______________________________________________________________________
-            """,
+    	if band is set to a certain value it will read just this band;
+	default is to read the first band; to read in all bands set band to zero; 
+	band can also be a list e.g.: [1,4,5] will be readin in the same order as passed
+	(if band is a list start counting by 1);
+	creates a 2d or 3d stack;
+	
+	shape is (rows, columns for 2d) (band, rows, columns for 3d) 
 
-            "read_tif_info":"""read_tif_info:
+    '''
+    def read_data(inTif, band_nr, nodata=0):
+        band = inTif.GetRasterBand(band_nr)
+        data = zz_gdalnum.BandReadAsArray(band)
+        inTif = None
+        if type(data)==None.__class__:
+	    raise
+        else:
+	    if nodata==0:
+	        return data
+	    elif nodata==1:
+	        noda = band.GetNoDataValue()
+	        return data, noda
+
+    try:
+        #default band is 1 and default for return nodata value is False ~ 0 ;1 ~ True
+        inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_ReadOnly)
+	if band == 0:
+	    #get number of available bands and create list from it with range
+	    nr_of_bands = range(1,inTif.RasterCount+1)
+	elif type(band)== int:
+	    nr_of_bands = 1
+	elif type(band)==list:
+	    nr_of_bands = band
+	    #test if max passed value is in the range of possible bands
+	    if np.array(nr_of_bands).max() > inTif.RasterCount:
+	        raise ValueError('max Value in the list is higher then the max possible nr of Bands in the raster\n --> max Value is: {0}'.format(inTif.RasterCount)) 
+
+	#read in band(s)
+        if type(inTif)!='NoneType':
+	    if nr_of_bands == 1:
+		return read_data(inTif, band, nodata)
+	    elif type(nr_of_bands) == list and len(nr_of_bands) > 1:
+	        for b in nr_of_bands:
+		    #initialize and create the stack
+		    if b == 1 :
+		        stack = read_data(inTif, b)
+			stack = stack.reshape(1, stack.shape[0], stack.shape[1])
+		    else:
+		    	#read in all other bands
+		    	stack = np.vstack((stack, read_data(inTif, b).reshape((1, stack.shape[1], stack.shape[2]))))
+		return stack
+	    elif type(nr_of_bands) == list and len(nr_of_bands) <=1:
+	        raise ValueError('error in passed band option\nband is not a list longer then 1\nto read in one band use: band = 1 (or any other possible band nr)')
+        else:
+            raise NameError('input is not a file or file is broken')
+    except:
+        print "Error:", sys.exc_info()[:2]
+        inTif = None
+        raise
+
+def set_nodata(tif,band,nodata):
+    '''
+    updates a tif and assigns the nodata value
+            
+	    set_nodata(fullPath,band,nodata)
+
+                >>> set_nodata(fullPath,1,-9999)
+
+                fullPath --> full path plus the filename
+                band     --> band to work with
+                nodata   --> nodata value
+
+    '''
+    #update a raster --> burn nodata value to raster
+    inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_Update)
+    band = inTif.GetRasterBand(band)
+    band.SetNoDataValue(nodata)
+    band=None
+    inTif = None
+
+def read_tif_info(tif):
+    '''
                 read infos from tif
 
                 >>> inTif, driver, inCols, inRows = read_tif_info(fullpath)
 
                 fullPath --> full path plus the filename
 
-                ______________________________________________________________________
-            """,
+    reads the infos ot the tif
+    returns the filepointer, driver, nr of columns and rows
+    used by write tif function, 
+    but can be used stand alone
+    '''
 
-            "write_tif":"""write_tif:
+    # to get the infos from the raster \
+    # returns the raster object, the driver, nr of cloumns and rows
+    inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_ReadOnly)
+    driver = zz_gdalnum.gdal.GetDriverByName('GTiff')
+    inCols = inTif.RasterXSize
+    inRows = inTif.RasterYSize
+    return inTif, driver, inCols, inRows
+
+
+def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, option=False ):
+    '''
                 write data to tif
 
                 >>> write_tif(file_with_srid, full_output_name, data, 1, nodata=False, option=False)
@@ -92,106 +165,9 @@ def Help(inhal = ''):
                                        if you put a Value --> this Value will be the NoData Value
                 option           --> "COMPRESS=DEFLATE"
 
-                ______________________________________________________________________
-            """,
-
-            "get_extent":"""get_extent:
-                creates an object with the extent infomation of the passed raster
-
-                >>> ext = get_extent(file_path)
-
-                file_path       --> full path to the file
-                inside are the following parametes:
-                    left, top, columns, rows, px_size
-                ______________________________________________________________________
-            """,
-
-            "raser2extent":"""raster2extent:
-                slice raster to the same extent
-
-                >>> data = raster2extent(data_path, dst_extent, nodata = False)
-
-                data_path       --> full path to file which should be sliced
-                dst_data        --> full path to file which works as the template
-                nodata          --> can be specified to set nodata value in the sliced output
-                                    default is np.nan (to check for np.nan you hav to use
-                                    np.isnan(...)
-                ______________________________________________________________________
-            """
-               }
-
-    print myDic["header"]
-    counter = 0
-    inhalt.sort()
-    op = []
-    for ele in inhalt:
-        for el in myDic.keys():
-            if ele.lower() in el.lower():
-                op.append(el)
-                #print myDic[el]
-                counter += 1
-
-    if counter >0:
-        op = sorted(list(set(op)))
-        for ele in op:
-            print myDic[ele]
-    elif counter == 0:
-        print ">>> Couldnt find what you are looking for<<<"
-        print ""
-        for ele in HelpInhalt:
-            print myDic[ele]
-
-###############################################################################
-###############################################################################
-
-
-
-###############################################################################
-####                            Functions                                  ####
-###############################################################################
-
-def read_tif(tif,band=1,nodata=0):
-    try:
-        #default band is 1 and default for return nodata value is False ~ 0 ;1 ~ True
-        inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_ReadOnly)
-        if type(inTif)!='NoneType':
-            band = inTif.GetRasterBand(band)
-            data = zz_gdalnum.BandReadAsArray(band)
-            inTif = None
-            if type(data)==None.__class__:
-                raise
-            else:
-                if nodata==0:
-                    return data
-                elif nodata==1:
-                    noda = band.GetNoDataValue()
-                    return data, noda
-        else:
-            raise NameError('input is not a file or file is broken')
-    except:
-        print "Error:", sys.exc_info()[:2]
-        inTif = None
-        raise
-
-def set_nodata(tif,band,nodata):
-    #update a raster --> burn nodata value to raster
-    inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_Update)
-    band = inTif.GetRasterBand(band)
-    band.SetNoDataValue(nodata)
-    band=None
-    inTif = None
-
-def read_tif_info(tif):
-    # to get the infos from the raster \
-    # returns the raster object, the driver, nr of cloumns and rows
-    inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_ReadOnly)
-    driver = zz_gdalnum.gdal.GetDriverByName('GTiff')
-    inCols = inTif.RasterXSize
-    inRows = inTif.RasterYSize
-    return inTif, driver, inCols, inRows
-
-
-def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, option=False ):
+    		
+		if data is a 3d array it will write all bands to the tif (in single bands)
+    '''
     dtypeL = [zz_gdalcon.GDT_Int16,
               zz_gdalcon.GDT_Int32,
               zz_gdalcon.GDT_UInt16,
@@ -199,28 +175,6 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, opt
               zz_gdalcon.GDT_Float32,
               zz_gdalcon.GDT_Float64,
               zz_gdalcon.GDT_Byte]
-    '''writes data to a tiff and writes the srid infos ot it
-        file_with_srid --> original file which has geoinformation
-        full_output_name --> path + filename + .tiff
-        data_to_write --> your new calculated data
-
-        dtype --> define the output datatype default is Int32:
-                imput number between 0 and 5:
-                    - 0 --> Int16
-                    - 1 --> Int32
-                    - 2 --> UInt16
-                    - 3 --> UInt32
-                    - 4 --> Float32
-                    - 5 --> Float64
-                    - 6 --> Byte
-        produces a new tiff
-
-        option = 'COMPRESS=DEFLATE' (gdal like options (-co "NAME=VALUE"))
-
-        if the passed data has more the onw band all bands will be written to the output
-
-    '''
-
     try:
         inTiff, driver, inCols, inRows = read_tif_info(file_with_srid)
         if len(data.shape)==3:
@@ -292,6 +246,16 @@ class extent():
 
 #returns an object with the extent of the passed image path
 def get_extent(data_path):
+    '''
+                creates an object with the extent infomation of the passed raster
+
+                >>> ext = get_extent(file_path)
+
+                file_path       --> full path to the file
+                inside are the following parametes:
+                    left, top, columns, rows, px_size
+    '''
+
     #path to be read in
     intif, driver, columns, rows = read_tif_info(data_path)
     #get info from raster
@@ -310,6 +274,17 @@ def get_extent(data_path):
 #to be able to calc with both in a numpy array
 #the input-rasters need to have the same resolution (pixelsize) - (but its checking for that)
 def raster2extent(data_path, dst_extent, nodata = False, return_orig_x0_y0_value = False):
+    '''
+                slice raster to the same extent
+
+                >>> data = raster2extent(data_path, dst_extent, nodata = False)
+
+                data_path       --> full path to file which should be sliced
+                dst_data        --> full path to file which works as the template
+                nodata          --> can be specified to set nodata value in the sliced output
+                                    default is np.nan (to check for np.nan you hav to use
+                                    np.isnan(...)
+    '''
     #get extentdata from source / data_path or from extent class
     src_extent = get_extent(data_path)
     dst_extent = get_extent(dst_extent)
