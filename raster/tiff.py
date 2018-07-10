@@ -27,9 +27,9 @@ import osgeo.gdalconst as zz_gdalcon
 ###############################################################################
 
 def read_tif(tif,band=1,nodata=0):
-    ''' 
+    '''
     	reads in a tif, and returns a numpy array;
-		
+
                 to read a tif into python
 
                 >>> data = read_tif(fullPath, bandNr)
@@ -42,7 +42,7 @@ def read_tif(tif,band=1,nodata=0):
 	band can also be a list e.g.: [1,4,5] will be readin in the same order as passed
 	(if band is a list start counting by 1);
 	creates a 2d or 3d stack;
-	
+
 	shape is (rows, columns for 2d) (band, rows, columns for 3d) 
 
     '''
@@ -64,7 +64,10 @@ def read_tif(tif,band=1,nodata=0):
         inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_ReadOnly)
 	if band == 0:
 	    #get number of available bands and create list from it with range
-	    nr_of_bands = range(1,inTif.RasterCount+1)
+        if inTif.RasterCount != 1
+            nr_of_bands = range(1,inTif.RasterCount+1)
+        else:
+            nr_of_bands = 1
 	elif type(band)== int:
 	    nr_of_bands = 1
 	elif type(band)==list:
@@ -99,7 +102,7 @@ def read_tif(tif,band=1,nodata=0):
 def set_nodata(tif,band,nodata):
     '''
     updates a tif and assigns the nodata value
-            
+
 	    set_nodata(fullPath,band,nodata)
 
                 >>> set_nodata(fullPath,1,-9999)
@@ -165,7 +168,7 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, opt
                                        if you put a Value --> this Value will be the NoData Value
                 option           --> "COMPRESS=DEFLATE"
 
-    		
+
 		if data is a 3d array it will write all bands to the tif (in single bands)
     '''
     dtypeL = [zz_gdalcon.GDT_Int16,
@@ -288,7 +291,7 @@ def raster2extent(data_path, dst_extent, nodata = False, return_orig_x0_y0_value
     #get extentdata from source / data_path or from extent class
     src_extent = get_extent(data_path)
     dst_extent = get_extent(dst_extent)
-    
+
     if src_extent.ret_extent() == dst_extent.ret_extent():
         data = read_tif(data_path)
         data = np.where(data==data[0,0], np.nan, data)
@@ -343,7 +346,7 @@ def raster2extent(data_path, dst_extent, nodata = False, return_orig_x0_y0_value
             x_slice = dst_extent.columns
         newdata[ y_offset:y_max, x_offset:x_max] = data[ : y_slice, : x_slice]
         newdata = np.where(newdata==orig_x0_y0, np.nan, newdata)
-        
+
         #return data in the same dimensions like the inputed dst_extent raster
         print "slicesd data"
         if return_orig_x0_y0_value:
