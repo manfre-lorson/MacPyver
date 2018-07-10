@@ -8,32 +8,32 @@ import os
 import pandas as pd
 from osgeo import ogr
 import numpy as np
-    
+
 
 class shp_attr_tbl():
     ''' put in full path of shp file
-    
+
         init creates list of fieldnames in the shape
-        
+
         with the method get_attr_tbl it reads in the dbf to a pandas dataframe'''
 
     def __init__(self,shp_name):
         #dictionary to translate the geometry
         _geometry_dic = {-2147483647:"Point25D",
                          -2147483646:"LineString25D",
-                         -2147483645:"Polygon25D", 
+                         -2147483645:"Polygon25D",
                          -2147483644:"MultiPoint25D",
-                         -2147483643:"MultiLineString25D", 
+                         -2147483643:"MultiLineString25D",
                          -2147483642:"MultiPolygon25D",
-                         0: "Geometry", 
-                         1: "Point", 
-                         2: "Line", 
-                         3:"Polygon", 
+                         0: "Geometry",
+                         1: "Point",
+                         2: "Line",
+                         3:"Polygon",
                          4:"MultiPoint",
-                         5: "MultiLineString", 
-                         6: "MultiPolygon", 
+                         5: "MultiLineString",
+                         6: "MultiPolygon",
                          100: "No Geometry"}
-          
+
         self.name =shp_name.split(os.sep)[-1]
         self.path = (os.sep).join(shp_name.split(os.sep)[:-1])
         driver = ogr.GetDriverByName("ESRI Shapefile")
@@ -45,15 +45,15 @@ class shp_attr_tbl():
 
         for i in range(layerDefinition.GetFieldCount()):
             self.fieldnames.append(layerDefinition.GetFieldDefn(i).GetName())
-        
+
         self.extent = layer.GetExtent()
         self.spatialref = layer.GetSpatialRef().ExportToPrettyWkt()
         self.featurecount = layer.GetFeatureCount()
-            
+
     def get_attr_tbl(self, fields = None):
-        '''if no fields passed, it will read in all columns, 
+        '''if no fields passed, it will read in all columns,
             if some field passed, it will just read this subset
-            
+
             returned data is pandas dataframe'''
 
         if not fields:
@@ -63,23 +63,23 @@ class shp_attr_tbl():
             diffl = list(set(fields).difference(self.fieldnames))
             #create intersection list
             intersl = list(set(fields).intersection(self.fieldnames))
-            if diffl: 
+            if diffl:
                 print "ERROR: one or more fields are not in fieldnames:\n{0}".format(diffl)
                 print "used matching fields to create the attribute table:\n{0}".format(intersl)
             #create list of columns (fields) to use
             used_fields = intersl
-        
+
         #create empty dictionary to store all values
         dic = {}
         for fi in used_fields:
             dic[fi] = []
-        
+
         #reset pointer to begining of the file
-        driver = ogr.GetDriverByName("ESRI Shapefile")    
+        driver = ogr.GetDriverByName("ESRI Shapefile")
         ds = driver.Open(self.path + os.sep + self.name)
         layer = ds.GetLayer()
-        
-        #fill dic per row in layer / and per field 
+
+        #fill dic per row in layer / and per field
         for feature in layer:
             for fi in used_fields:
                 get_value = feature.GetField(fi)
@@ -88,20 +88,20 @@ class shp_attr_tbl():
                     get_value = np.nan
                 dic[fi].append(get_value)
         #save as pd in object
-        self.attributes  = pd.DataFrame(dic)   
+        self.attributes  = pd.DataFrame(dic)
 
     def to_csv(self, outpath, sep = ';', na_rep= 'NaN'):
         '''writes the dataframe to csv,
         to use the all opotions, just use name.attributes.to_csv()'''
-        
+
         if hasattr(self, 'attributes'):
             self.attributes.to_csv(outpath, sep, na_rep)
         else:
             print("ERROR: no data to write\nuse >>> .get_attr_tbl first")
-            
+
     def stats(self, min_max=False):
         '''prints several infos of the passed shp'''
-        
+
         _dtype_dic = {'int64':'int', 'object':'string', 'float64':'float'}
         if not hasattr(self, 'attributes'):
             self.get_attr_tbl()
@@ -112,7 +112,7 @@ class shp_attr_tbl():
         print '\nshape: columns: {0}; rows: {1}\n'.format(cols, rows)
         print self.spatialref
         print "\nGeometryType: {0}".format(self.geometrytype)
-        
+
         print "\nExtent (lon min, lon max, lat min, lat max)"
         print "{0}\n".format(self.extent)
         #to make the printing nice
@@ -124,34 +124,34 @@ class shp_attr_tbl():
         if min_max:
             min_max='| min, max'
         else:
-            min_max = ''        
+            min_max = ''
         print (colname+" "*maxlen)[:maxlen+2]+"| dtype    "+min_max
         if min_max:
             add = 12
         else:
             add = 0
         print "-"*(maxlen+2+10+add)
-        
+
         for x in self.fieldnames:
             if min_max:
                 if _dtype_dic[str(self.attributes[x].dtype)] == 'float':
                     minmax = "| not created because its float"
-                else: 
+                else:
                     unique = list(set(self.attributes[x]))
                     unique.sort()
                     minV, maxV = unique[0], unique[-1]
                     minmax = "| {0}, {1}".format(minV, maxV)
             else:
                 minmax = ''
-            
+
             print'{0} | {1} {2}'.format( (x+" "*maxlen)[:maxlen+1],(_dtype_dic[str(self.attributes[x].dtype)]+'  '*4)[:8], minmax )
             #print (x+" "*maxlen)[:maxlen+1],'|', (self.attributes[x].dtype +'     ')[:8]+ ' | ' + 
-        
 
-    
+
+
     def uniqueValue(self, ColumnName):
         '''returns the unique values of the specified column'''
-        
+
         if ColumnName not in self.fieldnames:
             print 'ERROR: ColumnName does not exists in  fieldnames'
             print 'Check existing names with *.fieldnames'
@@ -161,11 +161,11 @@ class shp_attr_tbl():
             print "ERROR: function was not build to create unique values from floats"
             print "to do that use: foo = set(*.attributes[ColumnName])"
 
-        
+
 if __name__=='__main__':
     '''can be used as stand alone commandline tool\n
     all the script with a shapefile'''
-    
+
     import argparse
     parser = argparse.ArgumentParser(description='    prints the information of the passed shp file\n\
     is part of the python site-package MacPyver\n\
@@ -174,7 +174,7 @@ if __name__=='__main__':
                 help='put in the full path input file, with filename (shapefile)\nextension dosent matter (can be dbf/prj/shp/shx/...)',
                 type=str#argparse.FileType('r')
                 )
-    parser.add_argument('-w','--wait', 
+    parser.add_argument('-w','--wait',
                         help='you are willing to wait until all entries are sorted \nand you get the min and max value per column',
                         default=False, action='store_true')
 
@@ -182,7 +182,7 @@ if __name__=='__main__':
     #assign variables
     infile = parse.infile
     wait = parse.wait
-    
+
     #check if file exists
     if not infile.endswith('.shp'):
         infile = infile[:infile.rfind('.')]+'.shp'
@@ -190,7 +190,7 @@ if __name__=='__main__':
         print '\nERROR: file {0} dosent exists in the filesystem'.format(infile)
     else:
         shp = shp_attr_tbl(infile)
-        
+
         if wait:
             shp.stats(1)
         elif shp.featurecount > 10000:
@@ -200,7 +200,7 @@ if __name__=='__main__':
         else:
             shp.stats(1)
 
-''' 
+'''
 for windows users: for an easy use of the commandline, do:
 create a ogrinfo2.bat file in a directory which is in your windows path variable (if you are able to use the gdal commands from the cmd
 just put the created .bat in the same directory)
