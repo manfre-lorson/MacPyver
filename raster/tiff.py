@@ -209,6 +209,39 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, opt
         print ("Could not write the nodata value")
     except:
         print "Unexpected error:", sys.exc_info()
+        
+def add_band(src_file, src_add, option="COMPRESS=DEFLATE"):
+    """ adding a band/bands to an existing file
+        just working if the files have the same extent, resolution and nr of pixel
+        
+        add_band(src_file, file_to_add) (bands will be added to src_file)
+    """
+    #pointer/open to files
+    src_ds = gdal.OpenShared(src_file)    
+    add_ds = gdal.OpenShared(src_add)
+
+    #check extent and resolution and ...
+    src_ext = mp.raster.tiff.get_extent(src_file)    
+    add_ext = mp.raster.tiff.get_extent(src_add)
+    if src_ext.ret_extent() != add_ext.ret_extent():
+        print("Error in extent, the files are not equal in extent/resolution/pixel\nnot able to perform the function")
+        print("src_file:", src_ext.ret_extent())
+        print("src_add:", add_ext.ret_extent())
+    else:
+        #get band counts for the rasters
+        src_bands_count = src_ds.RasterCount
+        add_bands_count = add_ds.RasterCount
+        #create copy of orig in RAM
+        tmp_ds = gdal.GetDriverByName('MEM').CreateCopy('', src_ds, 0)
+        #add all bands
+        del src_ds
+        for bands2add in range(1,add_bands_count+1):
+            add_b = add_ds.GetRasterBand(bands2add).ReadAsArray()
+            tmp_ds.AddBand()
+            tmp_ds.GetRasterBand(src_bands_count+bands2add).WriteArray(add_b)
+        #write / overwrite file to disk
+        gdal.GetDriverByName('GTiff').CreateCopy(src_band, tmp_ds, 0, options=[option])
+        del tmp_ds, add_b, add_ds
 
 
 ####################################################################################
