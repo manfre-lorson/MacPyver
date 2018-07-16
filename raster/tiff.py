@@ -8,8 +8,10 @@ Created on Thu Feb 25 15:12:36 2016
 import sys
 import numpy as np
 
+from osgeo import gdal
 import osgeo.gdalnumeric as zz_gdalnum
 import osgeo.gdalconst as zz_gdalcon
+
 
 
 
@@ -84,13 +86,13 @@ def read_tif(tif,band=1,nodata=0):
             elif type(nr_of_bands) == list and len(nr_of_bands) > 1:
                 for b in nr_of_bands:
                 #initialize and create the stack
-                if b == 1 :
-                    stack = read_data(inTif, b)
-                stack = stack.reshape(1, stack.shape[0], stack.shape[1])
-                else:
-                    #read in all other bands
-                    stack = np.vstack((stack, read_data(inTif, b).reshape((1, stack.shape[1], stack.shape[2]))))
-            return stack
+                    if b == 1 :
+                        stack = read_data(inTif, b)
+                        stack = stack.reshape(1, stack.shape[0], stack.shape[1])
+                    else:
+                        #read in all other bands
+                        stack = np.vstack((stack, read_data(inTif, b).reshape((1, stack.shape[1], stack.shape[2]))))
+                return stack
             elif type(nr_of_bands) == list and len(nr_of_bands) <=1:
                 raise ValueError('error in passed band option\nband is not a list longer then 1\nto read in one band use: band = 1 (or any other possible band nr)')
             else:
@@ -222,8 +224,8 @@ def add_band(src_file, src_add, option="COMPRESS=DEFLATE"):
     add_ds = gdal.OpenShared(src_add)
 
     #check extent and resolution and ...
-    src_ext = mp.raster.tiff.get_extent(src_file)    
-    add_ext = mp.raster.tiff.get_extent(src_add)
+    src_ext = get_extent(src_file)    
+    add_ext = get_extent(src_add)
     if src_ext.ret_extent() != add_ext.ret_extent():
         print("Error in extent, the files are not equal in extent/resolution/pixel\nnot able to perform the function")
         print("src_file:", src_ext.ret_extent())
@@ -241,7 +243,7 @@ def add_band(src_file, src_add, option="COMPRESS=DEFLATE"):
             tmp_ds.AddBand()
             tmp_ds.GetRasterBand(src_bands_count+bands2add).WriteArray(add_b)
         #write / overwrite file to disk
-        gdal.GetDriverByName('GTiff').CreateCopy(src_band, tmp_ds, 0, options=[option])
+        gdal.GetDriverByName('GTiff').CreateCopy(src_file, tmp_ds, 0, options=[option]) #CreateCopy(output_path, data2write)
         del tmp_ds, add_b, add_ds
 
 
