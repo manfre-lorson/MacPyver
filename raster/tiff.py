@@ -53,11 +53,11 @@ def read_tif(tif,band=1,nodata=0):
         if type(data)==None.__class__:
             raise
         else:
-        if nodata==0:
-            return data
-        elif nodata==1:
-            noda = band.GetNoDataValue()
-            return data, noda
+            if nodata==0:
+                return data
+            elif nodata==1:
+                noda = band.GetNoDataValue()
+                return data, noda
 
     try:
         #default band is 1 and default for return nodata value is False ~ 0 ;1 ~ True
