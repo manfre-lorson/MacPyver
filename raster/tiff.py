@@ -64,7 +64,7 @@ def read_tif(tif,band=1,nodata=0):
         inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_ReadOnly)
         if band == 0:
             #get number of available bands and create list from it with range
-            if inTif.RasterCount != 1
+            if inTif.RasterCount != 1:
                 nr_of_bands = range(1,inTif.RasterCount+1)
             else:
                 nr_of_bands = 1
