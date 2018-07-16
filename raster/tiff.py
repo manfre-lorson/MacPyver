@@ -14,8 +14,8 @@ import osgeo.gdalconst as zz_gdalcon
 
 
 
-'	    __________________________________________________'
-	    ###            MacPyver.raster.tiff            ###
+'        __________________________________________________'
+        ###            MacPyver.raster.tiff            ###
             ###   The Swissknife like Python-Package for   ###
             ###        work in general and with GIS        ###
 '           __________________________________________________'
@@ -28,7 +28,7 @@ import osgeo.gdalconst as zz_gdalcon
 
 def read_tif(tif,band=1,nodata=0):
     '''
-    	reads in a tif, and returns a numpy array;
+        reads in a tif, and returns a numpy array;
 
                 to read a tif into python
 
@@ -37,13 +37,13 @@ def read_tif(tif,band=1,nodata=0):
                 fullPath --> full path plus the filename
                 bandNr   --> the number of the band you want to read
 
-    	if band is set to a certain value it will read just this band;
-	default is to read the first band; to read in all bands set band to zero; 
-	band can also be a list e.g.: [1,4,5] will be readin in the same order as passed
-	(if band is a list start counting by 1);
-	creates a 2d or 3d stack;
+        if band is set to a certain value it will read just this band;
+    default is to read the first band; to read in all bands set band to zero; 
+    band can also be a list e.g.: [1,4,5] will be readin in the same order as passed
+    (if band is a list start counting by 1);
+    creates a 2d or 3d stack;
 
-	shape is (rows, columns for 2d) (band, rows, columns for 3d) 
+    shape is (rows, columns for 2d) (band, rows, columns for 3d) 
 
     '''
     def read_data(inTif, band_nr, nodata=0):
@@ -51,49 +51,50 @@ def read_tif(tif,band=1,nodata=0):
         data = zz_gdalnum.BandReadAsArray(band)
         inTif = None
         if type(data)==None.__class__:
-	    raise
+        raise
         else:
-	    if nodata==0:
-	        return data
-	    elif nodata==1:
-	        noda = band.GetNoDataValue()
-	        return data, noda
+        if nodata==0:
+            return data
+        elif nodata==1:
+            noda = band.GetNoDataValue()
+            return data, noda
 
     try:
         #default band is 1 and default for return nodata value is False ~ 0 ;1 ~ True
         inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_ReadOnly)
-	if band == 0:
-	    #get number of available bands and create list from it with range
-        if inTif.RasterCount != 1
-            nr_of_bands = range(1,inTif.RasterCount+1)
-        else:
+        if band == 0:
+            #get number of available bands and create list from it with range
+            if inTif.RasterCount != 1
+                nr_of_bands = range(1,inTif.RasterCount+1)
+            else:
+                nr_of_bands = 1
+        elif type(band)== int:
             nr_of_bands = 1
-	elif type(band)== int:
-	    nr_of_bands = 1
-	elif type(band)==list:
-	    nr_of_bands = band
-	    #test if max passed value is in the range of possible bands
-	    if np.array(nr_of_bands).max() > inTif.RasterCount:
-	        raise ValueError('max Value in the list is higher then the max possible nr of Bands in the raster\n --> max Value is: {0}'.format(inTif.RasterCount)) 
+        elif type(band)==list:
+            nr_of_bands = band
+            #test if max passed value is in the range of possible bands
+            if np.array(nr_of_bands).max() > inTif.RasterCount:
+                raise ValueError('max Value in the list is higher then the max possible nr of Bands in the raster\n --> max Value is: {0}'.format(inTif.RasterCount))
+                sys.exit(1)
 
-	#read in band(s)
+        #read in band(s)
         if type(inTif)!='NoneType':
-	    if nr_of_bands == 1:
-		return read_data(inTif, band, nodata)
-	    elif type(nr_of_bands) == list and len(nr_of_bands) > 1:
-	        for b in nr_of_bands:
-		    #initialize and create the stack
-		    if b == 1 :
-		        stack = read_data(inTif, b)
-			stack = stack.reshape(1, stack.shape[0], stack.shape[1])
-		    else:
-		    	#read in all other bands
-		    	stack = np.vstack((stack, read_data(inTif, b).reshape((1, stack.shape[1], stack.shape[2]))))
-		return stack
-	    elif type(nr_of_bands) == list and len(nr_of_bands) <=1:
-	        raise ValueError('error in passed band option\nband is not a list longer then 1\nto read in one band use: band = 1 (or any other possible band nr)')
-        else:
-            raise NameError('input is not a file or file is broken')
+            if nr_of_bands == 1:
+                return read_data(inTif, band, nodata)
+            elif type(nr_of_bands) == list and len(nr_of_bands) > 1:
+                for b in nr_of_bands:
+                #initialize and create the stack
+                if b == 1 :
+                    stack = read_data(inTif, b)
+                stack = stack.reshape(1, stack.shape[0], stack.shape[1])
+                else:
+                    #read in all other bands
+                    stack = np.vstack((stack, read_data(inTif, b).reshape((1, stack.shape[1], stack.shape[2]))))
+            return stack
+            elif type(nr_of_bands) == list and len(nr_of_bands) <=1:
+                raise ValueError('error in passed band option\nband is not a list longer then 1\nto read in one band use: band = 1 (or any other possible band nr)')
+            else:
+                raise NameError('input is not a file or file is broken')
     except:
         print "Error:", sys.exc_info()[:2]
         inTif = None
@@ -103,7 +104,7 @@ def set_nodata(tif,band,nodata):
     '''
     updates a tif and assigns the nodata value
 
-	    set_nodata(fullPath,band,nodata)
+        set_nodata(fullPath,band,nodata)
 
                 >>> set_nodata(fullPath,1,-9999)
 
@@ -169,7 +170,7 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, opt
                 option           --> "COMPRESS=DEFLATE"
 
 
-		if data is a 3d array it will write all bands to the tif (in single bands)
+        if data is a 3d array it will write all bands to the tif (in single bands)
     '''
     dtypeL = [zz_gdalcon.GDT_Int16,
               zz_gdalcon.GDT_Int32,
