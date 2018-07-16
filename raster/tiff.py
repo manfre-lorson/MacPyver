@@ -51,7 +51,7 @@ def read_tif(tif,band=1,nodata=0):
         data = zz_gdalnum.BandReadAsArray(band)
         inTif = None
         if type(data)==None.__class__:
-        raise
+            raise
         else:
         if nodata==0:
             return data
