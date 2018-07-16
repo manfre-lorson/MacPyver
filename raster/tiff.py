@@ -16,8 +16,8 @@ import osgeo.gdalconst as zz_gdalcon
 
 
 
-'        __________________________________________________'
-        ###            MacPyver.raster.tiff            ###
+'           __________________________________________________'
+            ###            MacPyver.raster.tiff            ###
             ###   The Swissknife like Python-Package for   ###
             ###        work in general and with GIS        ###
 '           __________________________________________________'
