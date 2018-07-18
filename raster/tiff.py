@@ -2,7 +2,15 @@
 """
 Created on Thu Feb 25 15:12:36 2016
 
-@author: Floiran Wolf
+@author: Florian Wolf
+
+
+            __________________________________________________
+            ###              MacPyver.raster.tiff          ###
+            ###   The Swissknife like Python-Package for   ###
+            ###        work in general and with GIS        ###
+            __________________________________________________
+
 """
 
 import sys
@@ -13,31 +21,16 @@ import osgeo.gdalnumeric as zz_gdalnum
 import osgeo.gdalconst as zz_gdalcon
 
 
-
-
-
-'           __________________________________________________'
-            ###            MacPyver.raster.tiff            ###
-            ###   The Swissknife like Python-Package for   ###
-            ###        work in general and with GIS        ###
-'           __________________________________________________'
-
-
-
-###############################################################################
-####                            Functions                                  ####
-###############################################################################
-
 def read_tif(tif,band=1,nodata=0):
     '''
         reads in a tif, and returns a numpy array;
 
-                to read a tif into python
+        to read a tif into python
 
-                >>> data = read_tif(fullPath, bandNr)
+        >>> data = read_tif(fullPath, bandNr)
 
-                fullPath --> full path plus the filename
-                bandNr   --> the number of the band you want to read
+        fullPath --> full path plus the filename
+        bandNr   --> the number of the band you want to read
 
         if band is set to a certain value it will read just this band;
     default is to read the first band; to read in all bands set band to zero; 
@@ -108,11 +101,11 @@ def set_nodata(tif,band,nodata):
 
         set_nodata(fullPath,band,nodata)
 
-                >>> set_nodata(fullPath,1,-9999)
+        >>> set_nodata(fullPath,1,-9999)
 
-                fullPath --> full path plus the filename
-                band     --> band to work with
-                nodata   --> nodata value
+        fullPath --> full path plus the filename
+        band     --> band to work with
+        nodata   --> nodata value
 
     '''
     #update a raster --> burn nodata value to raster
@@ -124,11 +117,11 @@ def set_nodata(tif,band,nodata):
 
 def read_tif_info(tif):
     '''
-                read infos from tif
+        read infos from tif
 
-                >>> inTif, driver, inCols, inRows = read_tif_info(fullpath)
+        >>> inTif, driver, inCols, inRows = read_tif_info(fullpath)
 
-                fullPath --> full path plus the filename
+        fullPath --> full path plus the filename
 
     reads the infos ot the tif
     returns the filepointer, driver, nr of columns and rows
@@ -147,29 +140,29 @@ def read_tif_info(tif):
 
 def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, option=False ):
     '''
-                write data to tif
+        write data to tif
 
-                >>> write_tif(file_with_srid, full_output_name, data, 1, nodata=False, option=False)
+        >>> write_tif(file_with_srid, full_output_name, data, 1, nodata=False, option=False)
 
-                file_wite_srid   --> the original file with spatial infromations
-                full_output_name --> path + filename + tile type e.g.: r'c:\\temp\\file1.tif'
-                data             --> data you want to write to tif
-                dtype            --> Output data type (int, float ...)
-                                     input number between 0 and 5:
-                                        - 0 --> Int16
-                                        - 1 --> Int32
-                                        - 2 --> UInt16
-                                        - 3 --> UInt32
-                                        - 4 --> Float32
-                                        - 5 --> Float64
-                                        - 6 --> UInt8
-                                 --> default is Int32
-                nodata           --> by default there will be no NoData Value asigned
-                                       if True:
-                                          it will put the max Value for Unsigned Integers
-                                          it will put the min Value for signed Integers and floats
-                                       if you put a Value --> this Value will be the NoData Value
-                option           --> "COMPRESS=DEFLATE"
+        file_wite_srid   --> the original file with spatial infromations
+        full_output_name --> path + filename + tile type e.g.: r'c:\\temp\\file1.tif'
+        data             --> data you want to write to tif
+        dtype            --> Output data type (int, float ...)
+                             input number between 0 and 5:
+                                - 0 --> Int16
+                                - 1 --> Int32
+                                - 2 --> UInt16
+                                - 3 --> UInt32
+                                - 4 --> Float32
+                                - 5 --> Float64
+                                - 6 --> UInt8
+                         --> default is Int32
+        nodata           --> by default there will be no NoData Value asigned
+                               if True:
+                                  it will put the max Value for Unsigned Integers
+                                  it will put the min Value for signed Integers and floats
+                               if you put a Value --> this Value will be the NoData Value
+        option           --> "COMPRESS=DEFLATE"
 
 
         if data is a 3d array it will write all bands to the tif (in single bands)
@@ -214,7 +207,8 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, opt
         print "Unexpected error:", sys.exc_info()
         
 def add_band(src_file, src_add, option="COMPRESS=DEFLATE"):
-    """ adding a band/bands to an existing file
+    """ 
+        adding a band/bands to an existing file
         just working if the files have the same extent, resolution and nr of pixel
         
         add_band(src_file, file_to_add) (bands will be added to src_file)
@@ -299,7 +293,7 @@ def get_extent(data_path):
     intif, driver, columns, rows = read_tif_info(data_path)
     #get info from raster
     left, px_x_size, tilt_x, top, tilt_y, px_y_size = intif.GetGeoTransform()
-    intif, driver = [None]*2
+    intif, driver = [None]*2 #delete intif and driver
     if abs(px_x_size) != abs(px_y_size):
         print 'WARNING: x-pixel-size is not equal to y-pixel-size'
         data_extent = extent((left, top, columns, rows, px_x_size, px_y_size))
