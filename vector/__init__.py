@@ -3,7 +3,16 @@
 Created on Mon Feb 19 16:49:28 2018
 
 @author: Florian Wolf
+
+
+            __________________________________________________
+            ###              MacPyver.vector               ###
+            ###   The Swissknife like Python-Package for   ###
+            ###        work in general and with GIS        ###
+            __________________________________________________
+
 """
+
 import os
 import pandas as pd
 from osgeo import ogr
