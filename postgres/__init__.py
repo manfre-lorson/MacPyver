@@ -2,116 +2,16 @@
 """
 Created on Wed Mar 02 19:15:18 2016
 
-@author: fw56moba
-"""
+@author: Florian Wolf
 
 
-def Help(inhal = ''):
-    HelpInhalt =  sorted(['create_pg_Table_sql_command', 'create_pg_Table', 'create_pg_Table_load_to_pg'])
-    if inhal =='':
-        inhal = HelpInhalt
-    inhalt = inhal
-    if type(inhalt)== str:
-        cList = []
-        cList.append(inhalt)
-        cList.append("nix")
-        inhalt = cList
-
-
-    myDic = {"header": """
             __________________________________________________
             ###              MacPyver.postgres             ###
             ###   The Swissknife like Python-Package for   ###
             ###        work in general and with GIS        ###
             __________________________________________________
 
-                How to use the functions:
-                __________
-
-                __________________________________________
-
-             """,
-
-            "create_pg_Table_sql_command":"""create_pg_Table_sql_command:
-                returns the executable SQL command for postgres
-
-                >>> create_pg_Table_sql_command(fullpath, tablename, sep=';', header=0)
-
-                fullPath  --> full path plus the filename
-                tablename --> table name for the new table
-                sep       --> default sep is ;
-                header    --> default header is the first line in the csv
-
-
-                ______________________________________________________________________
-            """,
-
-            "create_pg_Table":"""create_pg_Table:
-                creates a table in the postgres database
-
-                >>> create_pg_Table(full_path, tablename, host,
-                                    user, password, dbname,
-                                    schema='public', port=5432,
-                                    sep=';', header=0):
-
-                fullPath  --> full path plus the filename
-                tablename --> table name for the new table
-                host      --> database host
-                user      --> your database user name
-                password  --> your database password
-                dbname    --> database you want to create the table
-                schema    --> schema you want to create the table, default is public
-                port      --> port of your database, default is 5432
-                sep       --> default sep is ;
-                header    --> default header is the first line in the csv
-
-                ______________________________________________________________________
-            """,
-
-            "create_pg_Table_load_to_pg":"""create_pg_Table_load_to_pg:
-                creates a table in the postgres database and loads the data to the
-                database
-
-                >>> create_pg_Table_load_to_pg(full_path, tablename, host,
-                                    user, password, dbname,
-                                    schema='public', port=5432,
-                                    sep=';', header=0):
-
-                fullPath  --> full path plus the filename
-                tablename --> table name for the new table
-                host      --> database host
-                user      --> your database user name
-                password  --> your database password
-                dbname    --> database you want to create the table and load the data
-                schema    --> schema you want to create the table, default is public
-                port      --> port of your database, default is 5432
-                sep       --> default sep is ;
-                header    --> default header is the first line in the csv
-
-                ______________________________________________________________________
-            """}
-
-    print myDic["header"]
-    counter = 0
-    inhalt.sort()
-    op = []
-    for ele in inhalt:
-        for el in myDic.keys():
-            if ele.lower() in el.lower():
-                op.append(el)
-                #print myDic[el]
-                counter += 1
-
-    if counter >0:
-        op = sorted(list(set(op)))
-        for ele in op:
-            print myDic[ele]
-    elif counter == 0:
-        print ">>> Fehler: Wort nicht gefunden <<<"
-        print ""
-        for ele in HelpInhalt:
-            print myDic[ele]
-
+"""
 
 try:
     import psycopg2 as pg
@@ -120,6 +20,18 @@ try:
 
 
     def create_pg_Table_sql_command(full_path, tablename, sep=';', header=0, write= False):
+        '''
+        create_pg_Table_sql_command:
+            returns the executable SQL command for postgres
+
+            >>> create_pg_Table_sql_command(fullpath, tablename, sep=';', header=0)
+
+            fullPath  --> full path plus the filename
+            tablename --> table name for the new table
+            sep       --> default sep is ;
+            header    --> default header is the first line in the csv
+        '''
+        
         #read csv with pandas
         data = pd.read_csv(full_path, sep=sep,header=header)
         #get header from the readed data
@@ -157,6 +69,26 @@ try:
 
 
     def create_pg_Table(full_path, tablename, host, user, password, dbname, schema='public', port=5432, sep=';', header=0 ):
+        '''
+        create_pg_Table:
+            creates a table in the postgres database
+
+            >>> create_pg_Table(full_path, tablename, host,
+            user, password, dbname,
+            schema='public', port=5432,
+            sep=';', header=0):
+
+            fullPath  --> full path plus the filename
+            tablename --> table name for the new table
+            host      --> database host
+            user      --> your database user name
+            password  --> your database password
+            dbname    --> database you want to create the table
+            schema    --> schema you want to create the table, default is public
+            port      --> port of your database, default is 5432
+            sep       --> default sep is ;
+            header    --> default header is the first line in the csv
+        '''
         #get the sql command
         sql = create_pg_Table_sql_command(full_path, tablename, sep, header, write= False)
         #create the connection string for the database
@@ -177,6 +109,27 @@ try:
 
 
     def create_pg_Table_load_to_pg(full_path, tablename, host, user, password, dbname, schema='public', port=5432, sep=';', header=0, ):
+        '''
+        create_pg_Table_load_to_pg:
+            creates a table in the postgres database and loads the data to the
+            database
+
+            >>> create_pg_Table_load_to_pg(full_path, tablename, host,
+                                user, password, dbname,
+                                schema='public', port=5432,
+                                sep=';', header=0):
+
+            fullPath  --> full path plus the filename
+            tablename --> table name for the new table
+            host      --> database host
+            user      --> your database user name
+            password  --> your database password
+            dbname    --> database you want to create the table and load the data
+            schema    --> schema you want to create the table, default is public
+            port      --> port of your database, default is 5432
+            sep       --> default sep is ;
+            header    --> default header is the first line in the csv
+        '''
         #get the sql command and the data from the given table
         sql, data = create_pg_Table_sql_command(full_path, tablename, sep=sep, header=header, write= True)
         #create the connection string for the database
