@@ -68,19 +68,11 @@ def README():
 
                    --> info
 
-                   --> send eMails
-
                    --> raster work (common Filetypes and hdf5)
 
                    --> PostgreSQL
-
-
-              To see the functions in the Subpackages navigate into
-              the Subpackage and call the Help() function
-
-              Inside the Help() you see the "HOW TO WORK" with the functions"
-
-
+                   
+                   --> vector (work with shape files)
 
 
       ######################################################################### 
