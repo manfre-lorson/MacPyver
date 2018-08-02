@@ -18,7 +18,13 @@ import psycopg2 as pg
 import pandas as pd
 from sqlalchemy import create_engine
 
+##############################################################################
+'''functions to create sql-command/ load tables to postgres
 
+    --> create_pg_Table_sql_command
+    --> create_pg_Table
+    --> create_pg_Table_load_to_pg
+'''
 def create_pg_Table_sql_command(full_path, tablename, sep=';', header=0, write= False):
     '''
     create_pg_Table_sql_command:
@@ -31,7 +37,7 @@ def create_pg_Table_sql_command(full_path, tablename, sep=';', header=0, write= 
         sep       --> default sep is ;
         header    --> default header is the first line in the csv
     '''
-    
+
     #read csv with pandas
     data = pd.read_csv(full_path, sep=sep,header=header)
     #get header from the readed data
@@ -151,4 +157,76 @@ def create_pg_Table_load_to_pg(full_path, tablename, host, user, password, dbnam
     #append the data to the created table
     data.to_sql(tablename,engine,if_exists='append')
     pg_conn.close()
+###############################################################################
 
+###############################################################################
+'''
+communicate with postgres and execute sql querys
+'''
+class pg_communicate():
+    '''class to connect to postgres and execute querys
+       and get the return of the sql query
+
+    - init will create the connection
+    - refresh_con for refreshing the pointer to the database
+    - fetch to execute the query and get the return
+    - close to close the connetion
+    '''
+
+    def __init__(self, host, user, pw, db, port = 5432):
+        """create all variables for the connection to the database
+           and create the connection to the database"""
+        self.host = host
+        self.user = user
+        self.pw = pw
+        self.db = db
+        self.port = port
+        #creat pg_con str
+        self.pg_conn_str = "host=%s port=%d user=%s password=%s dbname=%s" % (self.host, self.port, self.user, self.pw, self.db)
+        #connect to the database
+        self.pg_conn = pg.connect(self.pg_conn_str)
+        #create a cursor on the database
+        self.pg_cur = self.pg_conn.cursor()
+
+    def refresh_cur(self):
+        """refresh pg cursor"""
+        self.pg_conn = pg.connect(self.pg_conn_str)
+        self.pg_cur = self.pg_conn.cursor()
+
+    def fetch(self, sql_query):
+        """execute sql and fetch the return of the query"""
+        try:
+            #execute the sql command
+            self.pg_cur.execute(sql_query)
+            #fetch return
+            records = self.pg_cur.fetchall()
+            if not records:
+                print('Error: no line to fetch')
+                return False
+            return records
+        except pg.Error, e:
+            #print errormessages
+            print( e.diag.severity)
+            error_message = e.diag.message_primary
+            print( error_message)
+            if error_message =='current transaction is aborted, commands ignored until end of transaction block':
+                print('WARNING: refreshed cursor')
+                self.refresh_cur()
+            return False
+
+    def commit(self, sql_command):
+        """commit some statement to the database, eg. creating a new table"""
+        try:
+            self.pg_cur.execute(sql_command)
+            self.pg_conn.commit()
+        except pg.Error, e:
+            print(e.diag.severity)
+            error_message = e.diag.message_primary
+            print( error_message)
+            if error_message =='current transaction is aborted, commands ignored until end of transaction block':
+                print('WARNING: refreshed cursor')
+                self.refresh_cur()
+
+    def close(self):
+        """close connection to the postgres db"""
+        self.pg_conn.close()
