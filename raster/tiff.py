@@ -142,11 +142,11 @@ def read_tif_info(tif):
     return inTif, driver, inCols, inRows
 
 
-def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, option=False ):
+def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=None, option=False ):
     '''
         write data to tif
 
-        >>> write_tif(file_with_srid, full_output_name, data, 1, nodata=False, option=False)
+        >>> write_tif(file_with_srid, full_output_name, data, 1, nodata=None, option=False)
 
         file_wite_srid   --> the original file with spatial infromations
         full_output_name --> path + filename + tile type e.g.: r'c:\\temp\\file1.tif'
@@ -195,7 +195,7 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=False, opt
         zz_gdalnum.CopyDatasetInfo(inTiff,dataOut)
         for band in range(nr_of_bands):
             bandOut = dataOut.GetRasterBand(band+1)
-            if nodata == 0 or nodata:
+            if nodata is not None:
                 bandOut.SetNoDataValue(nodata)
             if nr_of_bands==1:
                 zz_gdalnum.BandWriteArray(bandOut,data)
