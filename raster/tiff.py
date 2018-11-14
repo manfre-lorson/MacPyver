@@ -106,12 +106,16 @@ def set_nodata(tif,band,nodata):
         fullPath --> full path plus the filename
         band     --> band to work with
         nodata   --> nodata value
+        if nodata is set to None it will remove the nodata value
 
     '''
     #update a raster --> burn nodata value to raster
     inTif = zz_gdalnum.gdal.Open(tif, zz_gdalcon.GA_Update)
     band = inTif.GetRasterBand(band)
-    band.SetNoDataValue(nodata)
+    if nodata is None:
+        band.DeleteNoDataValue()
+    else:
+        band.SetNoDataValue(nodata)
     band=None
     inTif = None
 
