@@ -24,7 +24,11 @@ class shp_attr_tbl():
 
         init creates list of fieldnames in the shape
 
-        with the method get_attr_tbl it reads in the dbf to a pandas dataframe'''
+        with the method get_attr_tbl it reads in the dbf to a pandas dataframe
+        
+        possible to read dbf's directly to dataframe, just put ending .dbf instead
+        of .shp
+        '''
 
     def __init__(self,shp_name):
         #dictionary to translate the geometry
@@ -49,16 +53,16 @@ class shp_attr_tbl():
         ds = driver.Open(shp_name)
         layer = ds.GetLayer()
         layerDefinition = layer.GetLayerDefn()
-        self.geometrytype = _geometry_dic[layer.GetGeomType()]
         self.fieldnames = []
+        if not shp_name.endswith('.dbf'):
+            self.geometrytype = _geometry_dic[layer.GetGeomType()]
+            self.extent = layer.GetExtent()
+            self.spatialref = layer.GetSpatialRef().ExportToPrettyWkt()
+            self.featurecount = layer.GetFeatureCount()
 
         for i in range(layerDefinition.GetFieldCount()):
             self.fieldnames.append(layerDefinition.GetFieldDefn(i).GetName())
-
-        self.extent = layer.GetExtent()
-        self.spatialref = layer.GetSpatialRef().ExportToPrettyWkt()
-        self.featurecount = layer.GetFeatureCount()
-
+            
     def get_attr_tbl(self, fields = None):
         '''if no fields passed, it will read in all columns,
             if some field passed, it will just read this subset
@@ -109,55 +113,56 @@ class shp_attr_tbl():
             print("ERROR: no data to write\nuse >>> .get_attr_tbl first")
 
     def stats(self, min_max=False):
-        '''prints several infos of the passed shp'''
+        if hasattr(self,'geometrytype') :
+            '''prints several infos of the passed shp'''
 
-        _dtype_dic = {'int64':'int', 'object':'string', 'float64':'float'}
-        if not hasattr(self, 'attributes'):
-            self.get_attr_tbl()
-        rows , cols = self.attributes.shape
-        print'\n'
-        print 'directory:',self.path
-        print 'filename:',self.name
-        print '\nshape: columns: {0}; rows: {1}\n'.format(cols, rows)
-        print self.spatialref
-        print "\nGeometryType: {0}".format(self.geometrytype)
+            _dtype_dic = {'int64':'int', 'object':'string', 'float64':'float'}
+            if not hasattr(self, 'attributes'):
+                self.get_attr_tbl()
+            rows , cols = self.attributes.shape
+            print'\n'
+            print 'directory:',self.path
+            print 'filename:',self.name
+            print '\nshape: columns: {0}; rows: {1}\n'.format(cols, rows)
+            print self.spatialref
+            print "\nGeometryType: {0}".format(self.geometrytype)
 
-        print "\nExtent (lon min, lon max, lat min, lat max)"
-        print "{0}\n".format(self.extent)
-        #to make the printing nice
-        #get length of the longest fieldname and use it for printing
-        maxlen = len(max(self.fieldnames, key=len))
-        colname ='Column Name'
-        if len(colname)>=maxlen:
-            maxlen = len(colname)
-        if min_max:
-            min_max='| min, max'
-        else:
-            min_max = ''
-        print (colname+" "*maxlen)[:maxlen+2]+"| dtype    "+min_max
-        if min_max:
-            add = 12
-        else:
-            add = 0
-        print "-"*(maxlen+2+10+add)
-
-        for x in self.fieldnames:
+            print "\nExtent (lon min, lon max, lat min, lat max)"
+            print "{0}\n".format(self.extent)
+            #to make the printing nice
+            #get length of the longest fieldname and use it for printing
+            maxlen = len(max(self.fieldnames, key=len))
+            colname ='Column Name'
+            if len(colname)>=maxlen:
+                maxlen = len(colname)
             if min_max:
-                if _dtype_dic[str(self.attributes[x].dtype)] == 'float':
-                    minmax = "| not created because its float"
-                else:
-                    unique = list(set(self.attributes[x]))
-                    unique.sort()
-                    minV, maxV = unique[0], unique[-1]
-                    minmax = "| {0}, {1}".format(minV, maxV)
+                min_max='| min, max'
             else:
-                minmax = ''
+                min_max = ''
+            print (colname+" "*maxlen)[:maxlen+2]+"| dtype    "+min_max
+            if min_max:
+                add = 12
+            else:
+                add = 0
+            print "-"*(maxlen+2+10+add)
 
-            print'{0} | {1} {2}'.format( (x+" "*maxlen)[:maxlen+1],(_dtype_dic[str(self.attributes[x].dtype)]+'  '*4)[:8], minmax )
-            #print (x+" "*maxlen)[:maxlen+1],'|', (self.attributes[x].dtype +'     ')[:8]+ ' | ' + 
+            for x in self.fieldnames:
+                if min_max:
+                    if _dtype_dic[str(self.attributes[x].dtype)] == 'float':
+                        minmax = "| not created because its float"
+                    else:
+                        unique = list(set(self.attributes[x]))
+                        unique.sort()
+                        minV, maxV = unique[0], unique[-1]
+                        minmax = "| {0}, {1}".format(minV, maxV)
+                else:
+                    minmax = ''
 
-
-
+                print'{0} | {1} {2}'.format( (x+" "*maxlen)[:maxlen+1],(_dtype_dic[str(self.attributes[x].dtype)]+'  '*4)[:8], minmax )
+                #print (x+" "*maxlen)[:maxlen+1],'|', (self.attributes[x].dtype +'     ')[:8]+ ' | ' + 
+        else:
+            print('WARNING: no stats due to missing geometry, file was a dbf')
+                
     def uniqueValue(self, ColumnName):
         '''returns the unique values of the specified column'''
 
