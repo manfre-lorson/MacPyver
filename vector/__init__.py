@@ -17,7 +17,7 @@ import os
 import pandas as pd
 from osgeo import ogr
 import numpy as np
-
+import cPickle as pickle
 
 class shp_attr_tbl():
     ''' put in full path of shp file
@@ -227,3 +227,37 @@ set args2=%2
 C:\Anaconda2\python.exe C:\Anaconda2\lib\site-packages\MacPyver\vector\__init__.py %args1% %args2%
 
 save this and then you can run it directly from your cmd '''
+
+
+
+#save dataframe:
+def save_df(dataframe, fullpath, timeit=False):
+    '''
+    uses the c function of pickle,
+    there is also a normal pure python pickle function
+    -- but not here
+
+    save a pandas dataframe as pickle format
+    https://docs.python.org/2/library/pickle.html
+    
+    '''
+    if timeit:
+        from datetime import datetime
+        start = datetime.now()
+    pickle.dump( df, open(fullpath, 'wb'))
+    if timeit:
+        stop = datetime.now()
+        print 'duration:', stop - start
+
+def read_df(fullpath, timeit = False):
+    '''
+    read pickled datarame into pandas dataframe
+    '''
+    if timeit:
+        from datetime import datetime
+        start = datetime.now()
+    ret =  pickle.load( open(fullpath, 'rb'))
+    if timeit:
+        stop = datetime.now()
+        print 'duration:', stop - start
+    return ret
