@@ -19,7 +19,7 @@ import socket
 from glob import glob
 import os
 import fnmatch
-
+import subprocess
 
 
 def timestr():
@@ -188,3 +188,26 @@ def pathdepth(inpath, depth, exists = True):
         out = (os.sep).join(inpath.split(os.sep)[:depth])
         return out
 
+
+def get_stdout(cmd, verbose=False):
+    """
+    send command to the commandline and fetch the return
+    
+    oprion verbose: will also print the return
+    
+    from http://blog.kagesenshi.org/2008/02/teeing-python-subprocesspopen-output.html
+    """
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    stdout = []
+    while True:
+        line = p.stdout.readline()
+        line = line.replace('\n','').replace('\r','')
+        if line != '':
+            stdout.append(line)
+        if verbose:
+            print line,
+        if line == '' and p.poll() != None: #p.poll is checking if the process is still running 
+                                            #is it is running it returns None
+            break
+
+    return stdout
