@@ -220,6 +220,27 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=None, opti
         print ("Could not write the nodata value")
     except:
         print "Unexpected error:", sys.exc_info()
+
+def write_dirty_tif(outpath, data, dtype=1):
+    ''' raster write funktion without srid, should not be used!'''
+    dtypeL = [zz_gdalcon.GDT_Int16,
+              zz_gdalcon.GDT_Int32,
+              zz_gdalcon.GDT_UInt16,
+              zz_gdalcon.GDT_UInt32,
+              zz_gdalcon.GDT_Float32,
+              zz_gdalcon.GDT_Float64,
+              zz_gdalcon.GDT_Byte]
+    
+    driver = zz_gdalnum.gdal.GetDriverByName('GTiff')
+    inCols = data.shape[0]
+    inRows = data.shape[1]
+    
+    dataOut = driver.Create(outpath,inCols,inRows,1, dtypeL[dtype])
+    bandOut = dataOut.GetRasterBand(1)
+    zz_gdalnum.BandWriteArray(bandOut,data)
+    bandOut = None
+    dataOut = None
+    
         
 def add_band(src_file, src_add, option="COMPRESS=DEFLATE"):
     """ 
