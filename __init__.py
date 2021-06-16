@@ -33,10 +33,10 @@ try:
 	from __send_email import send_mail
 except:
 	pass
-import info
-import raster
-import postgres
-import vector
+#import info
+from . import raster 
+#import postgres
+from . import vector
 
 
 
@@ -80,7 +80,7 @@ def README():
 
       """}
 
-    print myDic["header"]
+    print (myDic["header"])
     
 def outname(path, new_name_part = False , extension = False):
     '''this function is to rename / create output name for files
@@ -91,7 +91,7 @@ def outname(path, new_name_part = False , extension = False):
         
     no_change = path[:path.rfind('.')] #split on last point in string
     if new_name_part == False and extension == False: #checjk if new_name_part and extension are give
-        print 'error in naming, input is the same as output'
+        print ('error in naming, input is the same as output')
         return False
     if extension == False: #if no extension is given, take the on from the input file
         extension = path[path.rfind('.'):]
@@ -103,6 +103,6 @@ def outname(path, new_name_part = False , extension = False):
         new_name_part = new_name_part[1:]
     outname = no_change+'_'+new_name_part+'.'+extension #put all things together
     if path == outname: #check if new outname is equal to input
-        print 'error in naming, input is the same as output'
+        print ('error in naming, input is the same as output')
         return False
     return outname #return the new name

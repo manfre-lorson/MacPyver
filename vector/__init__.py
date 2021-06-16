@@ -17,7 +17,7 @@ import os
 import pandas as pd
 from osgeo import ogr
 import numpy as np
-import cPickle as pickle
+#import cPickle as pickle
 
 class shp_attr_tbl():
     ''' put in full path of shp file
@@ -77,8 +77,8 @@ class shp_attr_tbl():
             #create intersection list
             intersl = list(set(fields).intersection(self.fieldnames))
             if diffl:
-                print "ERROR: one or more fields are not in fieldnames:\n{0}".format(diffl)
-                print "used matching fields to create the attribute table:\n{0}".format(intersl)
+                print ("ERROR: one or more fields are not in fieldnames:\n{0}".format(diffl))
+                print ("used matching fields to create the attribute table:\n{0}".format(intersl))
             #create list of columns (fields) to use
             used_fields = intersl
 
@@ -120,15 +120,15 @@ class shp_attr_tbl():
             if not hasattr(self, 'attributes'):
                 self.get_attr_tbl()
             rows , cols = self.attributes.shape
-            print'\n'
-            print 'directory:',self.path
-            print 'filename:',self.name
-            print '\nshape: columns: {0}; rows: {1}\n'.format(cols, rows)
-            print self.spatialref
-            print "\nGeometryType: {0}".format(self.geometrytype)
+            print ('\n')
+            print ('directory:',self.path)
+            print ('filename:',self.name)
+            print ('\nshape: columns: {0}; rows: {1}\n'.format(cols, rows))
+            print (self.spatialref)
+            print ("\nGeometryType: {0}".format(self.geometrytype))
 
-            print "\nExtent (lon min, lon max, lat min, lat max)"
-            print "{0}\n".format(self.extent)
+            print ("\nExtent (lon min, lon max, lat min, lat max)")
+            print ("{0}\n".format(self.extent))
             #to make the printing nice
             #get length of the longest fieldname and use it for printing
             maxlen = len(max(self.fieldnames, key=len))
@@ -144,7 +144,7 @@ class shp_attr_tbl():
                 add = 12
             else:
                 add = 0
-            print "-"*(maxlen+2+10+add)
+            print ("-"*(maxlen+2+10+add))
 
             for x in self.fieldnames:
                 if min_max:
@@ -158,7 +158,7 @@ class shp_attr_tbl():
                 else:
                     minmax = ''
 
-                print'{0} | {1} {2}'.format( (x+" "*maxlen)[:maxlen+1],(_dtype_dic[str(self.attributes[x].dtype)]+'  '*4)[:8], minmax )
+                print('{0} | {1} {2}'.format( (x+" "*maxlen)[:maxlen+1],(_dtype_dic[str(self.attributes[x].dtype)]+'  '*4)[:8], minmax ))
                 #print (x+" "*maxlen)[:maxlen+1],'|', (self.attributes[x].dtype +'     ')[:8]+ ' | ' + 
         else:
             print('WARNING: no stats due to missing geometry, file was a dbf')
@@ -167,13 +167,13 @@ class shp_attr_tbl():
         '''returns the unique values of the specified column'''
 
         if ColumnName not in self.fieldnames:
-            print 'ERROR: ColumnName does not exists in  fieldnames'
-            print 'Check existing names with *.fieldnames'
+            print ('ERROR: ColumnName does not exists in  fieldnames')
+            print ('Check existing names with *.fieldnames')
         if self.attributes[ColumnName].dtype in [np.int, np.int8, np.int16, np.int32, np.int64, np.object]:
             return list(set(self.attributes[ColumnName]))
         else:
-            print "ERROR: function was not build to create unique values from floats"
-            print "to do that use: foo = set(*.attributes[ColumnName])"
+            print ("ERROR: function was not build to create unique values from floats")
+            print ("to do that use: foo = set(*.attributes[ColumnName])")
 
 
 if __name__=='__main__':
@@ -201,7 +201,7 @@ if __name__=='__main__':
     if not infile.endswith('.shp'):
         infile = infile[:infile.rfind('.')]+'.shp'
     if not os.path.exists(infile):
-        print '\nERROR: file {0} dosent exists in the filesystem'.format(infile)
+        print ('\nERROR: file {0} dosent exists in the filesystem'.format(infile))
     else:
         shp = shp_attr_tbl(infile)
 
@@ -209,8 +209,8 @@ if __name__=='__main__':
             shp.stats(1)
         elif shp.featurecount > 10000:
             shp.stats()
-            print "\nWARNING: didnt do the min-max values because of to many entries"
-            print "If you are willing to wait use the -w flag"
+            print ("\nWARNING: didnt do the min-max values because of to many entries")
+            print ("If you are willing to wait use the -w flag")
         else:
             shp.stats(1)
 
@@ -229,7 +229,7 @@ C:\Anaconda2\python.exe C:\Anaconda2\lib\site-packages\MacPyver\vector\__init__.
 save this and then you can run it directly from your cmd '''
 
 
-
+"""
 #save dataframe:
 def save_df(dataframe, fullpath, timeit=False):
     '''
@@ -244,10 +244,10 @@ def save_df(dataframe, fullpath, timeit=False):
     if timeit:
         from datetime import datetime
         start = datetime.now()
-    pickle.dump( df, open(fullpath, 'wb'))
+    pickle.dump( dataframe, open(fullpath, 'wb'))
     if timeit:
         stop = datetime.now()
-        print 'duration:', stop - start
+        print ('duration:', stop - start)
 
 def read_df(fullpath, timeit = False):
     '''
@@ -259,5 +259,6 @@ def read_df(fullpath, timeit = False):
     ret =  pickle.load( open(fullpath, 'rb'))
     if timeit:
         stop = datetime.now()
-        print 'duration:', stop - start
+        print ('duration:', stop - start)
     return ret
+"""

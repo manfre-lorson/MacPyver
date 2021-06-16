@@ -1,6 +1,6 @@
 
 try:
-    import tiff
+    from . import tiff
     print("full tiff support")
 except:
     print("no tiff support")

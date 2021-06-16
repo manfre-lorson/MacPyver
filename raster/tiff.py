@@ -92,7 +92,7 @@ def read_tif(tif,band=1,nodata=0):
             else:
                 raise NameError('input is not a file or file is broken')
     except:
-        print "Error:", sys.exc_info()[:2]
+        print ("Error:", sys.exc_info()[:2])
         inTif = None
         raise
 
@@ -215,11 +215,11 @@ def write_tif(file_with_srid,full_output_name, data, dtype= 1, nodata=None, opti
             bandOut = None
         dataOut = None
     except IOError as e:
-        print "I/O error({0}): {1}".format(e.errno, e.strerror)
+        print ("I/O error({0}): {1}".format(e.errno, e.strerror))
     except ValueError:
         print ("Could not write the nodata value")
     except:
-        print "Unexpected error:", sys.exc_info()
+        print ("Unexpected error:", sys.exc_info())
 
 def write_dirty_tif(outpath, data, dtype=1):
     ''' raster write funktion without srid, should not be used!'''
@@ -290,8 +290,8 @@ class extent():
             if len(coordinates)==6:
                 for x in coordinates:
                     if isinstance(x, (float, int)) == False:
-                        print "Error in given coordinates, at least one given value is not a number"
-                        print "all values set to zero"
+                        print ("Error in given coordinates, at least one given value is not a number")
+                        print ("all values set to zero")
                         coordinates = [0,0,0,0,0,0]
                 self.left, self.top, self.columns, self.rows, self.px_size, self.py_size = coordinates
         else:
@@ -302,7 +302,7 @@ class extent():
             self.px_size = 0
             self.py_size = 0
             if quite == False:
-                print "WARNING: all extent values are set to zero"
+                print ("WARNING: all extent values are set to zero")
 
     #retun list with extent infos
     def ret_extent(self):
@@ -318,7 +318,7 @@ class extent():
         
         self.right = self.left + self.columns * self.px_size
         self.bottom = self.top - abs(self.rows * self.py_size)
-        print 'right: {0} and bottom: {1} are stored in the object'.format(self.right, self.bottom)
+        print ('right: {0} and bottom: {1} are stored in the object'.format(self.right, self.bottom))
 
 #returns an object with the extent of the passed image path
 def get_extent(data_path):
@@ -338,7 +338,7 @@ def get_extent(data_path):
     left, px_x_size, tilt_x, top, tilt_y, px_y_size = intif.GetGeoTransform()
     intif, driver = [None]*2 #delete intif and driver
     if abs(px_x_size) != abs(px_y_size):
-        print 'WARNING: x-pixel-size is not equal to y-pixel-size'
+        print ('WARNING: x-pixel-size is not equal to y-pixel-size')
         data_extent = extent((left, top, columns, rows, px_x_size, px_y_size))
         return data_extent
     else:
@@ -369,7 +369,7 @@ def raster2extent(data_path, dst_extent, nodata = False, return_orig_x0_y0_value
     if src_extent.ret_extent() == dst_extent.ret_extent():
         data = read_tif(data_path)
         data = np.where(data==data[0,0], np.nan, data)
-        print "red data"
+        print ("red data")
         return data
 
     elif dst_extent.px_size == src_extent.px_size:
@@ -422,13 +422,13 @@ def raster2extent(data_path, dst_extent, nodata = False, return_orig_x0_y0_value
         newdata = np.where(newdata==orig_x0_y0, np.nan, newdata)
 
         #return data in the same dimensions like the inputed dst_extent raster
-        print "slicesd data"
+        print ("slicesd data")
         if return_orig_x0_y0_value:
             return newdata, orig_x0_y0
         else:
             return newdata
     else:
-        print "ERROR: pixel-size dosent match / you need to resample one of the files; src: {0} != dst: {1}".format(src_extent.px_size, dst_extent.px_size)
+        print ("ERROR: pixel-size dosent match / you need to resample one of the files; src: {0} != dst: {1}".format(src_extent.px_size, dst_extent.px_size))
         return None
 
 
@@ -553,11 +553,11 @@ class geoobj():
             dataOut = None
             #print 0
         except IOError as e:
-            print "I/O error({0}): {1}".format(e.errno, e.strerror)
+            print ("I/O error({0}): {1}".format(e.errno, e.strerror))
         except ValueError:
             print ("Could not write the nodata value")
         except:
-            print "Unexpected error:", sys.exc_info()
+            print ("Unexpected error:", sys.exc_info())
         
 
     def updata_data(self, newdata):
@@ -573,9 +573,9 @@ class geoobj():
         if self.data.shape == newdata.shape:            
             self.data = newdata
         else:
-            print "ERROR: abord updating: updated Data has a differnet shape"
-            print "       original shape: {0}".format(self.data.shape)
-            print "       updated shape:  {0}".format(newdata.shape)
+            print ("ERROR: abord updating: updated Data has a differnet shape")
+            print ("       original shape: {0}".format(self.data.shape))
+            print ("       updated shape:  {0}".format(newdata.shape))
             
         
     def create_data2(self, indata):
@@ -584,8 +584,8 @@ class geoobj():
         
         self.data2 = indata
         if self.data2.shape != self.data.shape:
-            print "WARNING: data2 has a different shape then data"
-            print "data: {0} != data2: {1}".format(self.data.shape, self.data2.shape)
+            print ("WARNING: data2 has a different shape then data")
+            print ("data: {0} != data2: {1}".format(self.data.shape, self.data2.shape))
             
     
     def extrem_values(self, band_nr = 1):
