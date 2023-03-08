@@ -17,7 +17,194 @@ import os
 import pandas as pd
 from osgeo import ogr
 import numpy as np
+import shapely
+import matplotlib.pyplot as plt
 #import cPickle as pickle
+
+
+
+import numpy as np
+import shapely
+from shapely.geometry.polygon import Polygon
+from shapely.geometry.multipolygon import MultiPolygon
+import shapely.validation as shpval
+import geopandas as gpd
+import matplotlib.pyplot as plt
+from matplotlib import cm#color mapping - gradient
+import matplotlib as mpl
+import os
+import subprocess
+import geopy
+
+
+
+def plot_shapely(shply_list, alpha=.6):
+    '''shply_list needs to be a list of shaply geometries, alpha is just for polygons'''
+    if all([True if isinstance(s, shapely.geometry.base.BaseGeometry) else False  for s in shply_list ]):
+        pass
+    else:
+        raise TypeError('\n\tOne ore more elements of passed list is not of tpye shapely.geometry.base.BaseGeometry')
+        
+    for z in shply_list:
+        if 'Point' in z.geom_type:
+            x,y = z.xy
+            plt.plot(x, y, marker="o", markersize=10)
+        elif 'LineString' in z.geom_type:
+            x,y = z.xy
+            plt.plot(x, y)
+        else:
+            x,y = z.exterior.xy
+            plt.fill(x, y, alpha=.6)
+    plt.show()
+
+
+def plot_2_layers(background,  overlayer, figsize=(9,7), dpi = 150, bg_col_name = False, ol_col_name = False, save = False,  bkwargs = {}, **kwargs ):
+    """
+        bg_col_name: name of background column to display
+        ol_col_name: name of overlay column to display
+
+        **kwargs: - directly apply on overlay layer
+        to add kwargs to background use bkwargs = {dictionary}
+        eg.:
+            plot_2_layers(gdf, gdf.geometry.centroid,
+                          bkwargs={'facecolor':'none', 'linewidth':.2, 'color':'blue'}, # - background
+                          color='black') #- forground
+        facecolor='none',
+        edgecolor='k',
+        linewidth=.2,
+        color='red',
+        alpha=.5,
+        marker="."
+        markersize=40
+    """
+    if save != False and isinstance(save, str)==False:
+        save = '1'
+    fig, ax2 = plt.subplots(figsize=figsize, dpi=dpi)
+    #fig.set_size_inches(3.5, 2.5)
+    if bg_col_name != False:
+        background.plot(bg_col_name, ax = ax2, cmap =  cm.RdYlGn_r)
+    else:
+        if not 'color' in bkwargs.keys():
+            bkwargs['color'] = 'grey'
+        background.plot(ax = ax2, **bkwargs)
+    if ol_col_name != False:
+         overlayer.plot(ol_col_name, ax=ax2, **kwargs)
+    else:
+        if not 'color' in kwargs.keys():
+            kwargs['color'] ='red'
+        overlayer.plot( ax=ax2, **kwargs )
+    if save != False:
+        if os.path.exists(os.path.dirname(save))==False:
+            save = r'c:\temp\p2l-plot.pdf'
+            print('\n\n\tfile written to: {}'.format(save))
+        fig.savefig(save)
+        plt.close()
+    else:
+        plt.axis('equal')
+        plt.show()
+
+
+def plot_example(save = False):
+    gdf = gdf = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+    plot_2_layers(gdf, gdf.geometry.centroid.to_crs(4326),
+                  bg_col_name='pop_est',
+                  bkwargs={'facecolor':'none', 'linewidth':.2, 'color':'blue', 'cmap':cm.RdYlGn_r},
+                  color = 'blue', dpi=200, save=save, marker='.', markersize=10, alpha=.4)
+
+    print('''
+    plot_2_layers(gdf, gdf.geometry.centroid.to_crs(4326),
+            bg_col_name='pop_est',
+            bkwargs={'facecolor':'none', 'linewidth':.2, 'color':'blue', 'cmap':cm.RdYlGn_r},
+            color = 'blue', dpi=200, save=save, marker='.', markersize=10, alpha=.4)
+
+    was used as input
+          ''')
+
+
+def plot_grylrd(layer, columnname, ascending=True, verbose = False, **kwargs):
+    '''plot one layer with legend and from green to red or reverse'''
+    if ascending:
+        cmap = cm.RdYlGn_r
+    else:
+        cmap = cm.RdYlGn
+    #fig, ax = plt.subplots()
+    layer.plot(columnname, cmap = cmap, legend=True,  legend_kwds={'orientation': "horizontal", 'shrink':.75}, **kwargs)
+    if verbose:
+        print(layer[columnname].describe())
+
+def view_map(df, column, browser=False):
+    '''generate interactive map viewed in browser (chrome / firefox )'''
+    m = df.explore(column)
+    outfolder = r'C:\Users\{}\AppData\Roaming\pyongeo'.format(os.getlogin())
+    if not os.path.exists(outfolder):
+        os.mkdir(outfolder)
+    outfile =outfolder + os.sep + 'map_view_explore.html'
+    m.save(outfile)
+    #find firefox or google
+    if not browser:
+        browser = _find_browser()
+    if not os.path.exists(browser):
+        print('browser not found, please try again and pass path to browser')
+    else:
+        subprocess.run([browser ,outfile ])
+
+def _find_browser():
+    for f in [r'c:\Program Files', r'c:\Program Files (x86)']:
+        for p in [r'\Mozilla Firefox\firefox.exe', r'\Google\Chrome\Application\chrome.exe']:
+            if os.path.exists(f+p):
+                return(f+p)
+    print("Browser not found, please check")
+    return False
+
+
+
+def poi_in_poly(point_layer, polygon_layer, fillna = False, predicate='intersects'):
+    """count points in polygon
+    use: shp_poly['new_column'] = poi_in_poly(points, shp_poly)
+    retruns result as np.array / list
+
+    optional:
+        fillna - specify value to fill with
+        predicate - intersects(default) / within
+
+    """
+    polygon_layer = polygon_layer.copy()[[polygon_layer.geometry.name]]
+    polygon_layer.reset_index(inplace=True)
+    polygon_layer.rename(columns={polygon_layer.columns[0]:'_group_by_'}, inplace=True)
+    poinpol = gpd.sjoin(point_layer, polygon_layer, how="inner", predicate= predicate)
+    poinpol  = poinpol[['_group_by_']]
+    poinpol['_count_'] = 1
+    poinpol = poinpol.groupby('_group_by_').sum()
+    to_return = np.array(polygon_layer.join(poinpol)['_count_'])
+    if fillna or isinstance(fillna, int) or isinstance(fillna, float):
+        if isinstance(fillna, bool):
+            fill_val = 0
+        else:
+            fill_val = fillna
+        to_return = np.where(np.isnan(to_return), fill_val, to_return)
+    return to_return
+
+
+
+def mk_gdf_valid(gdf):
+    '''input: geodataframe
+        work: check if geometry of eacht row is valid, if not, make it valid
+              writes directly to passed gdf
+    usage:
+        mk_gdf_valid(gdf)'''
+    geom_col = gdf.geometry.name #get name of geometry column
+    #apply make_valid to all geometries
+    gdf[geom_col] = gdf[geom_col].apply(lambda geo: shpval.make_valid(geo))
+
+
+def get_lat_long(adresse):
+    '''pass adress string: "Erfurt Parsevalstr 2"
+    function is using the OSM data and searching for the Adress
+    and returning the found adress and coordinates'''
+    locator = geopy.Nominatim(user_agent='myGeocoder')
+    location = locator.geocode(adresse)
+    return location
+
 
 class shp_attr_tbl():
     ''' put in full path of shp file
